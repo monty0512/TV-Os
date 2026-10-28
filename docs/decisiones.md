@@ -102,6 +102,7 @@ Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQ
 | Tema | Decisión |
 |---|---|
 | Apps desactivadas | `debloat-list.txt` (incluye Play Películas, Play Juegos y AnyDesk entera) |
-| Arranque automático | Sin root no se puede bloquear el receptor de arranque (`pm disable` de componentes da "Shell cannot change component state"). Twitch: `RUN_ANY_IN_BACKGROUND ignore` + grupo `rare`. Prime Video sin tocar (decisión del usuario) |
+| Arranque automático | Sin root no se puede bloquear el receptor de arranque (`pm disable` de componentes da "Shell cannot change component state"). Twitch, Apple TV, Viki y Mercado Libre Play: `RUN_ANY_IN_BACKGROUND ignore` + grupo `rare`. Sin tocar: Prime Video (decisión del usuario) y Netflix, YouTube, Max, Pluto TV y Plex (publican contenido para el carrusel) |
+| Verificado tras reiniciar | AnyDesk y las apps de Xiaomi desactivadas ya no arrancan solas (logcat `-b system`) |
 | Animaciones | 0.5 en las tres escalas |
-| Deshacer | Respaldo del estado previo en `reports/`; `cleanup-restore` lo aplica |
+| Deshacer | Cada ejecución guarda un respaldo en `reports/`; `cleanup-restore` los aplica todos y gana el más antiguo (estado original) |

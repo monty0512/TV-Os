@@ -94,7 +94,7 @@ powershell -ExecutionPolicy Bypass -File .\cleanup.ps1 192.168.1.128
 Rechaza cualquier paquete protegido (sistema de la TV, Play Store, Chromecast, Asistente, Google Play Services, teclado, TV-Os y MiLauncher).
 Sin root no se puede impedir que una app arranque al encender; solo limitar lo que hace después o desactivarla entera.
 
-Deshacer (usa el respaldo más reciente):
+Deshacer (aplica todos los respaldos; vuelve al estado anterior a la primera limpieza):
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\cleanup-restore.ps1 192.168.1.128
 ```

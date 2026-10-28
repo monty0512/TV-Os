@@ -6,3 +6,6 @@
 # Formato: paquete  # motivo
 
 tv.twitch.android.app                  # Twitch (RecommendationsBroadcastReceiver al encender)
+com.apple.atve.androidtv.appletv       # Apple TV (LunaChannelNotificationReceiver + WorkManager al encender)
+com.viki.android                       # Viki (WorkManager al encender)
+com.mercadolibre.android.mplay_tv      # Mercado Libre Play (WorkManager al encender)
