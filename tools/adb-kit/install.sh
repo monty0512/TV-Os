@@ -24,6 +24,7 @@ echo "Se va a hacer en la TV:"
 echo "  1. Instalar/actualizar TV-Os: $APK"
 echo "  2. Poner TV-Os como Inicio (antes: $(current_home))"
 echo "  3. Mantener MiLauncher instalado como respaldo"
+echo "  4. Permitir que TV-Os apague la pantalla (temporizador y botón Apagar del Centro de control)"
 read -r -p "¿Continuar? (s/N) " ok
 case "$ok" in s|S|si|SI|sí|Sí) ;; *) echo "Cancelado. No se cambió nada."; exit 0 ;; esac
 
@@ -38,6 +39,12 @@ if [ "$NOW" = "$TVOS_HOME" ] || [ "$NOW" = "$TVOS_PKG/$TVOS_PKG.MainActivity" ];
 else
   echo "AVISO: el Inicio sigue siendo '$NOW'. Pulsa Inicio en el mando y elige TV-Os con 'Siempre'."
 fi
+echo "Activando el apagado desde TV-Os…"
+ADMIN_OUT="$(sh_ dpm set-active-admin --user 0 "$TVOS_ADMIN")"
+case "$ADMIN_OUT" in
+  *Success*|*already*) echo "OK: apagado activado" ;;
+  *) echo "AVISO: no se pudo activar el apagado: $ADMIN_OUT" ;;
+esac
 sh_ input keyevent KEYCODE_HOME >/dev/null
 echo
 echo "Listo. Para volver a MiLauncher: ./restore-home.sh ${1:-}"

@@ -22,6 +22,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -32,6 +33,7 @@ import com.jhonatan.tvos.R
 import com.jhonatan.tvos.data.Density
 import com.jhonatan.tvos.data.ThemeMode
 import com.jhonatan.tvos.data.UserSettings
+import com.jhonatan.tvos.system.Power
 import com.jhonatan.tvos.ui.components.TvButton
 import com.jhonatan.tvos.ui.components.remoteClickable
 import com.jhonatan.tvos.ui.theme.Accents
@@ -138,6 +140,16 @@ fun AppearanceScreen(
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             TvButton(text = stringResource(R.string.reorder_apps), onClick = onReorder)
             TvButton(text = stringResource(R.string.back), onClick = onBack)
+        }
+
+        // Para desinstalar TV-Os, Android exige quitar antes el permiso de apagado.
+        val context = LocalContext.current
+        var powerEnabled by remember { mutableStateOf(Power.isAvailable(context)) }
+        if (powerEnabled) {
+            TvButton(text = stringResource(R.string.disable_power), onClick = {
+                Power.disable(context)
+                powerEnabled = false
+            })
         }
 
         TvText(

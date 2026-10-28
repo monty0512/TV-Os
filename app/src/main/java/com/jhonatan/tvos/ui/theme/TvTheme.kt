@@ -21,6 +21,16 @@ val Accents = listOf(
     Color(0xFFBF5AF2),
 )
 
+/** Colores de avatar de los perfiles. */
+val ProfileColors = listOf(
+    Color(0xFF0A84FF),
+    Color(0xFFBF5AF2),
+    Color(0xFFFF9F0A),
+    Color(0xFF30D158),
+    Color(0xFFFF375F),
+    Color(0xFF64D2FF),
+)
+
 data class TvColors(
     val isDark: Boolean,
     val bg: Color,

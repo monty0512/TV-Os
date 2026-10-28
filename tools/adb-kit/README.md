@@ -46,7 +46,9 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 192.168.1.50
 # Linux / macOS
 ./install.sh 192.168.1.50
 ```
-El script muestra lo que va a hacer y pide confirmación. Instala el APK, pone TV-Os como Inicio y **deja MiLauncher instalado** como respaldo.
+El script muestra lo que va a hacer y pide confirmación. Instala el APK, pone TV-Os como Inicio, **deja MiLauncher instalado** como respaldo y activa el permiso de apagado (temporizador y botón Apagar del Centro de control).
+
+> Para **desinstalar** TV-Os, primero quita ese permiso en TV-Os › Personalizar › "Desactivar apagado".
 
 Volver a MiLauncher en cualquier momento:
 ```powershell
@@ -66,5 +68,15 @@ Objetivo: **menos de 70 MB PSS** con el Inicio en pantalla. El script también m
 | `install.*` | Instala TV-Os y lo pone como Inicio |
 | `restore-home.*` | Vuelve a MiLauncher como Inicio |
 | `memory.*` | Mide la memoria de TV-Os |
+| `launch-time.*` | Mide cuánto tarda en abrir Netflix y Disney+ desde cero |
 | `common.*` | Funciones compartidas |
 | `debloat-list.txt` | Lista de limpieza (se aplica en la Fase 4) |
+
+## Medir la apertura de apps
+Compara el tiempo de arranque en frío con TV-Os y con MiLauncher:
+```powershell
+powershell -ExecutionPolicy Bypass -File .\launch-time.ps1 192.168.1.128
+powershell -ExecutionPolicy Bypass -File .\restore-home.ps1 192.168.1.128
+powershell -ExecutionPolicy Bypass -File .\launch-time.ps1 192.168.1.128
+powershell -ExecutionPolicy Bypass -File .\install.ps1 192.168.1.128
+```

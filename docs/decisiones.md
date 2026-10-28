@@ -58,7 +58,17 @@ Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQ
 
 ## Fases
 0. Diagnóstico de solo lectura ✅
-1. Inicio, ordenar/ocultar apps, apariencia ← **actual**
-2. Perfiles, bienvenida, Centro de control
+1. Inicio, ordenar/ocultar apps, apariencia ✅
+2. Perfiles, bienvenida, Centro de control ← **actual**
 3. Top Shelf + Continuar viendo, fondo desde el móvil, clima
 4. Kit ADB de limpieza completa con opción de deshacer
+
+## Fase 2 (decisiones)
+| Tema | Decisión |
+|---|---|
+| Abrir Centro de control | Botón ≡ del mando dentro de TV-Os. La pulsación larga de Inicio la gestiona el sistema; TV-Os la recibe solo si el firmware la envía como `ALL_APPS` (por verificar en el MiTV) |
+| Perfil guarda | Fila de apps (orden y favoritas), apps ocultas, tema, acento, tamaño y accesibilidad. El fondo llega en la Fase 3 |
+| Selector de perfiles | Al encender la TV (salir del reposo) si hay más de un perfil |
+| Centro de control | Perfil, liberar memoria, temporizador (15/30/60/90), entradas, Wi-Fi, imagen, volumen y apagar |
+| Apagar / temporizador | Administrador de dispositivo con solo "bloquear pantalla", activado por `install`. Por verificar que el MiTV entre en reposo |
+| Entradas HDMI | `TvInputManager` + Live TV del fabricante. Por verificar en el MiTV |
