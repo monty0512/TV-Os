@@ -1,4 +1,4 @@
-# TV-Os · Fase 0: diagnóstico de la TV (Windows / PowerShell).
+﻿# TV-Os · Fase 0: diagnóstico de la TV (Windows / PowerShell).
 # SOLO LECTURA: no instala, no desactiva ni modifica nada en el dispositivo.
 #
 # Uso:
