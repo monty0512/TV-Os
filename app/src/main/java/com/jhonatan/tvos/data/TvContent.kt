@@ -37,33 +37,39 @@ class TvContentRepository(private val context: Context) {
     suspend fun previewByPackage(): Map<String, List<ShelfItem>> = withContext(Dispatchers.IO) {
         if (!hasPermission()) return@withContext emptyMap()
         val browsable = browsableChannels()
-        val items = query(TvContract.PreviewPrograms.CONTENT_URI) { c ->
+        // Se recorren todas las filas pero se guardan pocas por app: unas pocas apps (Pluto TV, Viki…)
+        // publican cientos de programas y no deben tapar a las demás.
+        val perApp = HashMap<String, Int>()
+        val items = query(TvContract.PreviewPrograms.CONTENT_URI, PREVIEW_COLUMNS) { c ->
+            val pkg = c.string("package_name") ?: return@query null
+            if ((perApp[pkg] ?: 0) >= MAX_PER_APP) return@query null
             val channel = c.long("channel_id")
-            if (browsable != null && channel != null && channel !in browsable) null else c.toItem()
+            if (browsable != null && channel != null && channel !in browsable) return@query null
+            c.toItem()?.also { perApp[pkg] = (perApp[pkg] ?: 0) + 1 }
         }
-        Log.i(TAG, "preview programs=${items.size} apps=${items.map { it.packageName }.distinct()}")
-        items.groupBy { it.packageName }.mapValues { (_, list) -> list.take(MAX_PER_APP) }
+        Log.i(TAG, "preview programs=${items.size} apps=${perApp.toSortedMap()}")
+        items.groupBy { it.packageName }
     }
 
     /** "Continuar viendo": lo más reciente primero. */
     suspend fun watchNext(): List<ShelfItem> = withContext(Dispatchers.IO) {
         if (!hasPermission()) return@withContext emptyList()
-        val rows = query(TvContract.WatchNextPrograms.CONTENT_URI) { c ->
+        val rows = query(TvContract.WatchNextPrograms.CONTENT_URI, WATCH_NEXT_COLUMNS) { c ->
             c.toItem()?.let { it to (c.long("last_engagement_time_utc_millis") ?: 0L) }
         }
-        Log.i(TAG, "watch next=${rows.size}")
-        rows.sortedByDescending { it.second }.map { it.first }.take(MAX_WATCH_NEXT)
+        Log.i(TAG, "watch next=${rows.size} apps=${rows.groupingBy { it.first.packageName }.eachCount().toSortedMap()}")
+        rows.sortedByDescending { it.second }.map { it.first }
     }
 
     /** null si no se pudo leer la tabla de canales (entonces no se filtra). */
     private fun browsableChannels(): Set<Long>? = runCatching {
-        query(TvContract.Channels.CONTENT_URI) { c ->
+        query(TvContract.Channels.CONTENT_URI, arrayOf("_id", "browsable")) { c ->
             if (c.int("browsable") == 1) c.long("_id") else null
         }.toSet()
     }.getOrNull()
 
-    private fun <T> query(uri: Uri, map: (Cursor) -> T?): List<T> = try {
-        context.contentResolver.query(uri, null, null, null, null)?.use { c ->
+    private fun <T> query(uri: Uri, projection: Array<String>, map: (Cursor) -> T?): List<T> = try {
+        context.contentResolver.query(uri, projection, null, null, null)?.use { c ->
             val out = ArrayList<T>()
             while (c.moveToNext() && out.size < MAX_ROWS) map(c)?.let(out::add)
             out
@@ -97,9 +103,14 @@ class TvContentRepository(private val context: Context) {
     companion object {
         const val PERMISSION = "android.permission.READ_TV_LISTINGS"
         private const val TAG = "TvOs"
-        private const val MAX_ROWS = 400
+        private const val MAX_ROWS = 5_000
+        private val PREVIEW_COLUMNS = arrayOf(
+            "_id", "package_name", "channel_id", "title", "episode_title", "short_description",
+            "poster_art_uri", "thumbnail_uri", "intent_uri", "last_playback_position_millis", "duration_millis",
+        )
+        private val WATCH_NEXT_COLUMNS = PREVIEW_COLUMNS.filter { it != "channel_id" }.toTypedArray() +
+            "last_engagement_time_utc_millis"
         private const val MAX_PER_APP = 6
-        private const val MAX_WATCH_NEXT = 10
 
         /** Abre un programa con el intent que publicó la app. */
         fun openIntent(item: ShelfItem): Intent? = item.intentUri?.let { uri ->

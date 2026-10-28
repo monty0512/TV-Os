@@ -28,7 +28,11 @@ object Weather {
                 get("https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current=temperature_2m,weather_code"),
             ).getJSONObject("current")
             WeatherNow(json.getDouble("temperature_2m").roundToInt(), json.getInt("weather_code"), city)
-        }.onFailure { Log.w("TvOs", "clima: ${it.javaClass.simpleName} ${it.message}") }.getOrNull()
+        }.onFailure {
+            val internet = context.checkSelfPermission(android.Manifest.permission.INTERNET) ==
+                android.content.pm.PackageManager.PERMISSION_GRANTED
+            Log.w("TvOs", "clima: ${it.javaClass.simpleName} ${it.message} · permiso INTERNET=$internet")
+        }.getOrNull()
     }
 
     /** Códigos WMO de Open-Meteo agrupados. */
