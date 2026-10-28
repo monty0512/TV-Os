@@ -23,7 +23,6 @@ import com.jhonatan.tvos.R
 import com.jhonatan.tvos.data.Profile
 import com.jhonatan.tvos.ui.components.ProfileAvatar
 import com.jhonatan.tvos.ui.components.displayName
-import com.jhonatan.tvos.ui.components.greeting
 import com.jhonatan.tvos.ui.theme.LocalReducedEffects
 import com.jhonatan.tvos.ui.theme.LocalTv
 import com.jhonatan.tvos.ui.theme.TvText
@@ -31,7 +30,7 @@ import kotlinx.coroutines.delay
 
 private const val WELCOME_MS = 1_800L
 
-/** Bienvenida al elegir perfil: avatar, "¡Hola, [nombre]!" y el saludo según la hora; se desvanece sola. */
+/** Bienvenida al elegir perfil: avatar y "¡Hola, [nombre]!"; se desvanece sola. */
 @Composable
 fun WelcomeOverlay(profile: Profile?, onDone: () -> Unit) {
     val t = LocalTv.current
@@ -59,7 +58,6 @@ fun WelcomeOverlay(profile: Profile?, onDone: () -> Unit) {
         ) {
             ProfileAvatar(p, 120.dp, fallback)
             TvText(stringResource(R.string.welcome_title, p.displayName(fallback)), 40.sp, weight = FontWeight.Bold)
-            TvText(greeting(p.name), 20.sp, color = t.fgMuted)
         }
     }
 }

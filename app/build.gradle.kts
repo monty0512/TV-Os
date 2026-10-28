@@ -12,8 +12,8 @@ android {
         applicationId = "com.jhonatan.tvos"
         minSdk = 29 // Android 10: MiTV-MOOQ0
         targetSdk = 34
-        versionCode = 6
-        versionName = "0.3.0"
+        versionCode = 7
+        versionName = "0.3.1"
         resourceConfigurations += listOf("es", "en")
     }
 

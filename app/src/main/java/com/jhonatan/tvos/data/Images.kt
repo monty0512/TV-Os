@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Log
 import android.util.LruCache
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -21,6 +22,7 @@ import java.net.URL
 object Images {
     private const val MAX_BYTES = 6 * 1024 * 1024
     private val cache = LruCache<String, ImageBitmap>(8)
+    private val failed = java.util.Collections.synchronizedSet(HashSet<String>())
 
     suspend fun load(context: Context, uri: String, maxWidth: Int, maxHeight: Int): ImageBitmap? {
         val key = "$uri@$maxWidth"
@@ -35,6 +37,9 @@ object Images {
                     inSampleSize = sampleSize(bounds.outWidth, bounds.outHeight, maxWidth, maxHeight)
                 }
                 BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)?.asImageBitmap()
+                    ?: error("no se pudo decodificar (${bytes.size} bytes)")
+            }.onFailure {
+                if (failed.add(uri)) Log.w("TvOs", "imagen: ${it.javaClass.simpleName} ${it.message} · $uri")
             }.getOrNull()?.also { cache.put(key, it) }
         }
     }

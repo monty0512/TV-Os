@@ -29,10 +29,8 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.jhonatan.tvos.data.AppRepository
-import com.jhonatan.tvos.data.ContinueItem
 import com.jhonatan.tvos.data.Images
 import com.jhonatan.tvos.data.Profile
-import com.jhonatan.tvos.data.RecentApps
 import com.jhonatan.tvos.data.ShelfItem
 import com.jhonatan.tvos.data.TvContentRepository
 import com.jhonatan.tvos.data.Weather
@@ -58,6 +56,7 @@ import java.util.Calendar
 private enum class Screen { ONBOARDING, PROFILES, HOME, EDIT, APPEARANCE }
 
 private const val LOG_TAG = "TvOs"
+private const val MAX_ROW_ITEMS = 10
 
 @Composable
 fun TvOsRoot(
@@ -85,7 +84,6 @@ fun TvOsRoot(
     var hour by remember { mutableIntStateOf(Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) }
     var shelfContent by remember { mutableStateOf<Map<String, List<ShelfItem>>>(emptyMap()) }
     var watchNext by remember { mutableStateOf<List<ShelfItem>>(emptyList()) }
-    var recentApps by remember { mutableStateOf(RecentApps.get(context)) }
     var weather by remember { mutableStateOf<WeatherNow?>(null) }
     var welcome by remember { mutableStateOf<Profile?>(null) }
     val latestState by rememberUpdatedState(stateOrNull)
@@ -195,11 +193,12 @@ fun TvOsRoot(
             .sortedBy { orderIndex[it.packageName] ?: Int.MAX_VALUE } // estable: el resto queda alfabético
     }
     val hiddenApps = remember(allApps, settings.hidden) { allApps.filter { it.packageName in settings.hidden } }
-    // "Continuar viendo": lo que publican las apps visibles; si no hay nada, las últimas apps abiertas.
-    val continueItems = remember(watchNext, recentApps, visible) {
-        val visiblePkgs = visible.associateBy { it.packageName }
-        val programs = watchNext.filter { it.packageName in visiblePkgs }.map { ContinueItem.Program(it) }
-        programs.ifEmpty { recentApps.mapNotNull { visiblePkgs[it] }.map { ContinueItem.RecentApp(it) } }
+    // Contenido por app: primero lo que dejaste a medias en esa app, luego sus recomendaciones.
+    val appContent = remember(watchNext, shelfContent) {
+        val byApp = watchNext.groupBy { it.packageName }
+        (byApp.keys + shelfContent.keys).associateWith { pkg ->
+            (byApp[pkg].orEmpty() + shelfContent[pkg].orEmpty()).distinctBy { it.title }.take(MAX_ROW_ITEMS)
+        }
     }
 
     fun update(transform: (UserSettings) -> UserSettings) {
@@ -268,18 +267,13 @@ fun TvOsRoot(
                     homeEvents = homeEvents,
                     profileName = state.active?.name.orEmpty(),
                     weather = weather,
-                    shelfContent = shelfContent,
-                    continueItems = continueItems,
+                    appContent = appContent,
                     onLaunch = { app ->
                         Log.i(LOG_TAG, "launch ${app.packageName}")
-                        RecentApps.record(context, app.packageName)
-                        recentApps = RecentApps.get(context)
                         repo.launchIntent(app.packageName)?.let { runCatching { context.startActivity(it) } }
                     },
                     onOpenProgram = { item ->
                         Log.i(LOG_TAG, "open program ${item.packageName} '${item.title}'")
-                        RecentApps.record(context, item.packageName)
-                        recentApps = RecentApps.get(context)
                         val intent = TvContentRepository.openIntent(item) ?: repo.launchIntent(item.packageName)
                         intent?.let { runCatching { context.startActivity(it) } }
                     },

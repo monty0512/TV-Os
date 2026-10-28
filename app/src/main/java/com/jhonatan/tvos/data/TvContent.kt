@@ -22,19 +22,6 @@ data class ShelfItem(
     val progress: Float?,
 )
 
-/** Lo que muestra la fila "Continuar viendo": un programa o, si no hay, una app usada hace poco. */
-sealed interface ContinueItem {
-    val key: String
-
-    data class Program(val item: ShelfItem) : ContinueItem {
-        override val key = "p${item.id}"
-    }
-
-    data class RecentApp(val app: TvApp) : ContinueItem {
-        override val key = "a${app.packageName}"
-    }
-}
-
 /**
  * Lee los canales de vista previa y "Continuar viendo" que publican las apps (TvProvider).
  * Requiere READ_TV_LISTINGS, que concede el script de instalación. Sin el permiso devuelve listas vacías
@@ -118,21 +105,5 @@ class TvContentRepository(private val context: Context) {
         fun openIntent(item: ShelfItem): Intent? = item.intentUri?.let { uri ->
             runCatching { Intent.parseUri(uri, Intent.URI_INTENT_SCHEME).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }.getOrNull()
         }
-    }
-}
-
-/** Apps abiertas desde TV-Os, la más reciente primero (respaldo de "Continuar viendo"). */
-object RecentApps {
-    private const val PREFS = "recent_apps"
-    private const val KEY = "list"
-    private const val MAX = 6
-
-    fun get(context: Context): List<String> =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, null)
-            ?.split('\n')?.filter { it.isNotBlank() } ?: emptyList()
-
-    fun record(context: Context, packageName: String) {
-        val list = (listOf(packageName) + get(context).filter { it != packageName }).take(MAX)
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY, list.joinToString("\n")).apply()
     }
 }

@@ -20,6 +20,8 @@ echo "== Teclas que recibió TV-Os =="
 grep -E "TvOs.*key " "$OUT" | sed 's/.*key /  /' | sort | uniq -c
 echo "== Apps abiertas por TV-Os =="
 grep -E "TvOs.*launch " "$OUT" | sed 's/.*launch /  /'
+echo "== Contenido de apps, clima e imágenes =="
+grep -E "preview programs|watch next|no se pudo leer|clima:|imagen:" "$OUT" | tail -n 8 | sed -E 's/^.*TvOs *\( *[0-9]+\): */  /'
 echo "== Arranques de actividades (sistema) =="
 grep -E "START u0" "$OUT" | sed -E 's/.*cmp=([^ }]+).*/  \1/' | head -n 20
 echo

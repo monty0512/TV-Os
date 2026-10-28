@@ -23,6 +23,8 @@ $lines | Where-Object { $_ -match "TvOs.*key (.+)$" } | ForEach-Object { ($_ -re
     Group-Object | ForEach-Object { Write-Host ("  {0} x{1}" -f $_.Name, $_.Count) }
 Write-Host "== Apps abiertas por TV-Os =="
 $lines | Where-Object { $_ -match "TvOs.*launch " } | ForEach-Object { Write-Host ("  " + ($_ -replace ".*launch ", "")) }
+Write-Host "== Contenido de apps, clima e imágenes =="
+$lines | Where-Object { $_ -match "preview programs|watch next|no se pudo leer|clima:|imagen:" } | Select-Object -Last 8 | ForEach-Object { Write-Host ("  " + ($_ -replace "^.*?TvOs\s*\(\s*\d+\):\s*", "")) }
 Write-Host "== Arranques de actividades (sistema) =="
 $lines | Where-Object { $_ -match "START u0.*cmp=([^ }]+)" } | ForEach-Object { if ($_ -match "cmp=([^ }]+)") { Write-Host ("  " + $Matches[1]) } } | Select-Object -First 20
 Write-Host ""

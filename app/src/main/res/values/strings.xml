@@ -87,12 +87,11 @@
     <string name="greeting_afternoon_alone">Good afternoon</string>
     <string name="greeting_night_alone">Good evening</string>
     <string name="welcome_title">Hi, %1$s!</string>
-    <string name="continue_watching">Continue watching</string>
-    <string name="recent_app">%1$s · opened recently</string>
     <string name="wx_clear">Clear</string>
     <string name="wx_cloudy">Cloudy</string>
     <string name="wx_fog">Fog</string>
     <string name="wx_rain">Rain</string>
     <string name="wx_snow">Snow</string>
     <string name="wx_storm">Storm</string>
+    <string name="app_content_title">For you on %1$s</string>
 </resources>

@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import com.jhonatan.tvos.data.ContinueItem
 import com.jhonatan.tvos.data.Images
 import com.jhonatan.tvos.data.ShelfItem
 import com.jhonatan.tvos.data.WeatherNow
@@ -109,8 +108,8 @@ fun HomeScreen(
     homeEvents: Int,
     profileName: String,
     weather: WeatherNow?,
-    shelfContent: Map<String, List<ShelfItem>>,
-    continueItems: List<ContinueItem>,
+    /** Contenido de cada app ("Continuar viendo" primero, luego sus recomendaciones). */
+    appContent: Map<String, List<ShelfItem>>,
     onLaunch: (TvApp) -> Unit,
     onOpenProgram: (ShelfItem) -> Unit,
     onEdit: (TvApp) -> Unit,
@@ -121,23 +120,21 @@ fun HomeScreen(
     val reduced = LocalReducedEffects.current
     val size = tileSize(density, LocalConfiguration.current.screenWidthDp.dp)
     var focusedIdx by remember { mutableIntStateOf(0) }
-    var focusedContinue by remember { mutableStateOf<ContinueItem?>(null) }
+    // Programa enfocado en la fila de contenido (null = el foco está en una app).
+    var focusedProgram by remember { mutableStateOf<ShelfItem?>(null) }
     val focusedApp = apps.getOrNull(focusedIdx)
-    // Fuera de la primera fila y de "Continuar viendo" = cajón desplegado.
-    val inDrawer = focusedContinue == null && focusedIdx >= size.columns
+    // La fila de contenido pertenece a la última app enfocada: no cambia al bajar a ella.
+    var rowOwner by remember { mutableStateOf<String?>(null) }
+    val ownerApp = apps.firstOrNull { it.packageName == rowOwner } ?: apps.firstOrNull()
+    val rowItems = ownerApp?.let { appContent[it.packageName] }.orEmpty()
+    // Fuera de la primera fila y de la fila de contenido = cajón desplegado.
+    val inDrawer = focusedProgram == null && focusedIdx >= size.columns
 
-    // Qué muestra el Top Shelf: el programa enfocado en "Continuar viendo" o lo que publica la app enfocada.
-    val shelfItems: List<ShelfItem> = when (val c = focusedContinue) {
-        is ContinueItem.Program -> listOf(c.item)
-        is ContinueItem.RecentApp -> shelfContent[c.app.packageName].orEmpty()
-        null -> focusedApp?.let { shelfContent[it.packageName] }.orEmpty()
-    }
-    val shelfLabel = when (val c = focusedContinue) {
-        is ContinueItem.RecentApp -> c.app.label
-        is ContinueItem.Program -> apps.firstOrNull { it.packageName == c.item.packageName }?.label ?: ""
-        null -> focusedApp?.label
-    }
-    val colorSource = (focusedContinue as? ContinueItem.RecentApp)?.app ?: focusedApp
+    // Top Shelf: el programa enfocado, o el contenido de la app enfocada (rota), o su color y nombre.
+    val shelfItems: List<ShelfItem> = focusedProgram?.let { listOf(it) }
+        ?: focusedApp?.let { appContent[it.packageName] }.orEmpty()
+    val colorSource = if (focusedProgram != null) ownerApp else focusedApp
+    val shelfLabel = colorSource?.label
     val shelfTarget = colorSource?.let { if (t.isDark) darken(it.color, 0.6f) else lighten(it.color, 0.7f) } ?: t.tile
     val shelfColor by animateColorAsState(shelfTarget, tween(if (reduced) 0 else 300), label = "shelf")
     val headerHeight by animateDpAsState(
@@ -152,7 +149,7 @@ fun HomeScreen(
     LaunchedEffect(homeEvents, apps.isNotEmpty()) {
         if (apps.isEmpty()) return@LaunchedEffect
         focusedIdx = 0
-        focusedContinue = null
+        focusedProgram = null
         gridState.scrollToItem(0)
         withFrameNanos { }
         runCatching { firstFocus.requestFocus() }
@@ -192,23 +189,20 @@ fun HomeScreen(
                     onLongClick = { onEdit(app) },
                     onFocused = {
                         focusedIdx = i
-                        focusedContinue = null
+                        focusedProgram = null
+                        rowOwner = app.packageName
                     },
                     modifier = if (i == 0) Modifier.focusRequester(firstFocus) else Modifier,
                 )
             }
-            if (continueItems.isNotEmpty()) {
-                item(key = "continue", span = { GridItemSpan(maxLineSpan) }) {
-                    ContinueRow(
-                        items = continueItems,
+            if (rowItems.isNotEmpty() && ownerApp != null) {
+                item(key = "app_content", span = { GridItemSpan(maxLineSpan) }) {
+                    AppContentRow(
+                        appLabel = ownerApp.label,
+                        items = rowItems,
                         cardWidth = size.width * 2 + size.gap,
-                        onFocused = { focusedContinue = it },
-                        onOpen = { c ->
-                            when (c) {
-                                is ContinueItem.Program -> onOpenProgram(c.item)
-                                is ContinueItem.RecentApp -> onLaunch(c.app)
-                            }
-                        },
+                        onFocused = { focusedProgram = it },
+                        onOpen = onOpenProgram,
                     )
                 }
             }
@@ -221,14 +215,15 @@ fun HomeScreen(
                     onLongClick = { onEdit(app) },
                     onFocused = {
                         focusedIdx = size.columns + i
-                        focusedContinue = null
+                        focusedProgram = null
+                        rowOwner = app.packageName
                     },
                 )
             }
             item(key = "personalize") {
                 PersonalizeTile(size, onClick = onPersonalize, onFocused = {
                     focusedIdx = apps.size
-                    focusedContinue = null
+                    focusedProgram = null
                 })
             }
         }
@@ -316,39 +311,37 @@ private fun TopShelf(
     }
 }
 
-/** Fila "Continuar viendo": programas publicados por las apps o, si no hay, las últimas apps abiertas. */
+/** Contenido de la app enfocada: lo que dejaste a medias (con progreso) y sus recomendaciones. */
 @Composable
-private fun ContinueRow(
-    items: List<ContinueItem>,
+private fun AppContentRow(
+    appLabel: String,
+    items: List<ShelfItem>,
     cardWidth: Dp,
-    onFocused: (ContinueItem) -> Unit,
-    onOpen: (ContinueItem) -> Unit,
+    onFocused: (ShelfItem) -> Unit,
+    onOpen: (ShelfItem) -> Unit,
 ) {
-    val t = LocalTv.current
     Column(Modifier.padding(top = 6.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        TvText(stringResource(R.string.continue_watching), 16.sp, weight = FontWeight.SemiBold)
+        TvText(stringResource(R.string.app_content_title, appLabel), 16.sp, weight = FontWeight.SemiBold)
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(18.dp),
             contentPadding = PaddingValues(vertical = 8.dp),
         ) {
-            items(items, key = { it.key }) { c ->
-                ContinueCard(c, cardWidth, onFocused = { onFocused(c) }, onClick = { onOpen(c) })
+            items(items, key = { it.id }) { item ->
+                ProgramCard(item, cardWidth, onFocused = { onFocused(item) }, onClick = { onOpen(item) })
             }
         }
-        Spacer(Modifier.height(2.dp).fillMaxWidth().background(t.tile))
     }
 }
 
 @Composable
-private fun ContinueCard(item: ContinueItem, width: Dp, onFocused: () -> Unit, onClick: () -> Unit) {
+private fun ProgramCard(item: ShelfItem, width: Dp, onFocused: () -> Unit, onClick: () -> Unit) {
     val t = LocalTv.current
     val context = LocalContext.current
     var focused by remember { mutableStateOf(false) }
     val cardShape = RoundedCornerShape(12.dp)
     val height = width * 9 / 16
     var image by remember { mutableStateOf<ImageBitmap?>(null) }
-    val uri = (item as? ContinueItem.Program)?.item?.imageUri
-    LaunchedEffect(uri) { image = uri?.let { Images.load(context, it, CARD_W, CARD_H) } }
+    LaunchedEffect(item.imageUri) { image = item.imageUri?.let { Images.load(context, it, CARD_W, CARD_H) } }
 
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Box(
@@ -368,12 +361,8 @@ private fun ContinueCard(item: ContinueItem, width: Dp, onFocused: () -> Unit, o
                     if (it) onFocused()
                 }),
         ) {
-            val banner = (item as? ContinueItem.RecentApp)?.app?.banner
-            when {
-                image != null -> Image(image!!, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                banner != null -> Image(banner, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-            }
-            val progress = (item as? ContinueItem.Program)?.item?.progress
+            image?.let { Image(it, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
+            val progress = item.progress
             if (progress != null) {
                 Box(
                     Modifier
@@ -386,15 +375,7 @@ private fun ContinueCard(item: ContinueItem, width: Dp, onFocused: () -> Unit, o
                 }
             }
         }
-        TvText(
-            text = when (item) {
-                is ContinueItem.Program -> item.item.title
-                is ContinueItem.RecentApp -> stringResource(R.string.recent_app, item.app.label)
-            },
-            size = 13.sp,
-            color = if (focused) t.fg else t.fgMuted,
-            modifier = Modifier.width(width),
-        )
+        TvText(item.title, 13.sp, color = if (focused) t.fg else t.fgMuted, modifier = Modifier.width(width))
     }
 }
 
