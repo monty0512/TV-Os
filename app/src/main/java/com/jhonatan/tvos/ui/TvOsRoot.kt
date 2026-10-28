@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -42,7 +43,7 @@ import java.util.Calendar
 private enum class Screen { HOME, EDIT, APPEARANCE }
 
 @Composable
-fun TvOsRoot(homeEvents: Int) {
+fun TvOsRoot(homeEvents: Int, foreground: Boolean) {
     val context = LocalContext.current
     val store = remember { SettingsStore(context.applicationContext) }
     val repo = remember { AppRepository(context.applicationContext) }
@@ -74,9 +75,22 @@ fun TvOsRoot(homeEvents: Int) {
         ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
         onDispose { context.unregisterReceiver(receiver) }
     }
+    val isForeground by rememberUpdatedState(foreground)
     LaunchedEffect(reloadKey) {
-        allApps = repo.loadApps()
+        val loaded = repo.loadApps()
+        allApps = if (isForeground || !reduced) loaded else loaded.withoutBanners()
         loading = false
+    }
+    // Equipo low-RAM: al abrir otra app se sueltan los banners para dejarle memoria,
+    // y se recargan al volver al Inicio (mientras tanto se ve el color de cada app).
+    LaunchedEffect(foreground) {
+        if (!reduced) return@LaunchedEffect
+        if (!foreground) {
+            allApps = allApps.withoutBanners()
+            Runtime.getRuntime().gc()
+        } else if (allApps.any { it.banner == null }) {
+            reloadKey++
+        }
     }
     // Hora para el tema automático.
     LaunchedEffect(Unit) {
@@ -162,3 +176,5 @@ fun TvOsRoot(homeEvents: Int) {
         }
     }
 }
+
+private fun List<TvApp>.withoutBanners() = map { it.copy(banner = null) }

@@ -3,7 +3,9 @@ package com.jhonatan.tvos.ui.components
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -62,33 +64,41 @@ fun AppTile(
     val elevation = if (focused && !reduced) 14.dp else 0.dp
 
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Image(
-            bitmap = app.banner,
-            contentDescription = app.label,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(width, height)
-                .graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
-                    rotationZ = if (grabbed) -2f else 0f
-                    shadowElevation = elevation.toPx()
-                    shape = TileShape
-                    clip = true
-                }
-                .then(
-                    if (focused || grabbed) Modifier.border(t.borderWidth, t.focusBorder, TileShape) else Modifier,
+        val tileModifier = Modifier
+            .size(width, height)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                rotationZ = if (grabbed) -2f else 0f
+                shadowElevation = elevation.toPx()
+                shape = TileShape
+                clip = true
+            }
+            .then(
+                if (focused || grabbed) Modifier.border(t.borderWidth, t.focusBorder, TileShape) else Modifier,
+            )
+            .then(if (onKey != null) Modifier.onPreviewKeyEvent(onKey) else Modifier)
+            .remoteClickable(
+                onClick = onClick,
+                onLongClick = onLongClick,
+                onFocus = {
+                    focused = it
+                    if (it) onFocused()
+                },
+            )
+        // Un único nodo enfocable: el foco no se pierde cuando el banner se libera o se recarga.
+        // Sin banner (volviendo de otra app) se ve el color de la app mientras se recarga.
+        Box(tileModifier.background(app.color)) {
+            val banner = app.banner
+            if (banner != null) {
+                Image(
+                    bitmap = banner,
+                    contentDescription = app.label,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
                 )
-                .then(if (onKey != null) Modifier.onPreviewKeyEvent(onKey) else Modifier)
-                .remoteClickable(
-                    onClick = onClick,
-                    onLongClick = onLongClick,
-                    onFocus = {
-                        focused = it
-                        if (it) onFocused()
-                    },
-                ),
-        )
+            }
+        }
         Spacer(Modifier.height(10.dp))
         TvText(
             text = app.label,

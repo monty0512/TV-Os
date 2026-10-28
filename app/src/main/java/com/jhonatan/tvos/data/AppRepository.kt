@@ -19,8 +19,11 @@ import kotlinx.coroutines.withContext
 data class TvApp(
     val packageName: String,
     val label: String,
-    /** Banner 16:9 listo para pintar (el de la app, o su icono sobre su color). */
-    val banner: ImageBitmap,
+    /**
+     * Banner 16:9 listo para pintar (el de la app, o su icono sobre su color).
+     * null mientras TV-Os está en segundo plano: se libera para dejar memoria a la app abierta.
+     */
+    val banner: ImageBitmap?,
     /** Color dominante del banner o icono: fondo del Top Shelf cuando la app no publica contenido. */
     val color: Color,
 )
@@ -53,7 +56,7 @@ class AppRepository(private val context: Context) {
         val icon = info.loadIcon(pm)
         val color = dominantColor(bannerDrawable ?: icon)
         val bitmap = if (bannerDrawable != null) {
-            bannerDrawable.toBitmap(BANNER_W, BANNER_H)
+            bannerDrawable.toBitmap(BANNER_W, BANNER_H, BANNER_CONFIG)
         } else {
             iconBanner(icon, color)
         }
@@ -67,7 +70,7 @@ class AppRepository(private val context: Context) {
 
     /** Banner sintético para apps sin banner: icono centrado sobre su color dominante. */
     private fun iconBanner(icon: Drawable, color: Color): Bitmap {
-        val bitmap = Bitmap.createBitmap(BANNER_W, BANNER_H, Bitmap.Config.ARGB_8888)
+        val bitmap = Bitmap.createBitmap(BANNER_W, BANNER_H, BANNER_CONFIG)
         val canvas = Canvas(bitmap)
         canvas.drawColor(darken(color, 0.55f).toArgb())
         val d = icon.constantState?.newDrawable()?.mutate() ?: icon
@@ -104,6 +107,9 @@ class AppRepository(private val context: Context) {
     companion object {
         const val BANNER_W = 320
         const val BANNER_H = 180
+
+        /** 16 bits por píxel: la mitad de memoria que ARGB_8888; los banners son opacos. */
+        val BANNER_CONFIG = Bitmap.Config.RGB_565
     }
 }
 

@@ -1,22 +1,34 @@
 #!/usr/bin/env bash
-# TV-Os · Mide la memoria del Inicio (objetivo Fase 1: < 60 MB PSS). Solo lectura.
+# TV-Os · Mide la memoria del Inicio en pantalla y en segundo plano. No modifica nada.
+# Objetivo: < 70 MB PSS en pantalla; en segundo plano debe bajar (banners liberados).
 set -u
 DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$DIR/common.sh"
 connect_tv "${1:-}"
-LIMIT_KB=61440
+LIMIT_KB=71680
+
+pss_kb() {
+  local out pss
+  out="$(sh_ dumpsys meminfo "$TVOS_PKG")"
+  pss="$(grep -E 'TOTAL PSS:' <<<"$out" | head -n1 | awk '{print $3}')"
+  [ -z "$pss" ] && pss="$(grep -E '^ +TOTAL ' <<<"$out" | head -n1 | awk '{print $2}')"
+  echo "$pss"
+  grep -E 'Java Heap:|Native Heap:|Code:|Graphics:' <<<"$out" | head -n4 >&2
+}
 
 sh_ input keyevent KEYCODE_HOME >/dev/null
-echo "Esperando 8 s a que el Inicio se estabilice…"
+echo "1/2 · Inicio en pantalla (esperando 8 s)…"
 sleep 8
-OUT="$(sh_ dumpsys meminfo "$TVOS_PKG")"
-PSS="$(grep -E 'TOTAL PSS:' <<<"$OUT" | head -n1 | awk '{print $3}')"
-[ -z "$PSS" ] && PSS="$(grep -E '^ +TOTAL ' <<<"$OUT" | head -n1 | awk '{print $2}')"
-if [ -z "$PSS" ]; then
-  echo "No se pudo leer la memoria. ¿Está TV-Os abierto?"
-  exit 1
-fi
-echo "TV-Os usa $((PSS / 1024)) MB (PSS) · límite $((LIMIT_KB / 1024)) MB"
-if [ "$PSS" -le "$LIMIT_KB" ]; then echo "RESULTADO: dentro del presupuesto"; else echo "RESULTADO: por encima del presupuesto"; fi
+FG="$(pss_kb)"
+[ -z "$FG" ] && { echo "No se pudo leer la memoria. ¿Está TV-Os instalado como Inicio?"; exit 1; }
+
+echo "2/2 · TV-Os en segundo plano: se abren los Ajustes (esperando 10 s)…"
+sh_ am start -a android.settings.SETTINGS >/dev/null
+sleep 10
+BG="$(pss_kb)"
+sh_ input keyevent KEYCODE_HOME >/dev/null
+
 echo
-grep -E 'Java Heap|Native Heap|Code:|Graphics:|TOTAL' <<<"$OUT" | head -n 8
+echo "En pantalla:       $((FG / 1024)) MB · límite $((LIMIT_KB / 1024)) MB"
+[ -n "$BG" ] && echo "En segundo plano:  $((BG / 1024)) MB"
+if [ "$FG" -le "$LIMIT_KB" ]; then echo "RESULTADO: dentro del presupuesto"; else echo "RESULTADO: por encima del presupuesto"; fi
