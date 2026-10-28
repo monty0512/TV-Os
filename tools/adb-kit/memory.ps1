@@ -25,9 +25,9 @@ if (-not $fg) { Write-Host "No se pudo leer la memoria. ¿Está TV-Os instalado 
 # Una app a pantalla completa (los Ajustes de Android TV son un panel y no ocultan el Inicio).
 $bgPkg = "com.google.android.youtube.tv"
 if (-not ((Sh "pm list packages") -contains "package:$bgPkg")) { $bgPkg = "com.android.vending" }
-Write-Host "2/2 · TV-Os en segundo plano: se abre $bgPkg (esperando 10 s)…"
+Write-Host "2/2 · TV-Os en segundo plano: se abre $bgPkg (esperando 12 s)…"
 Sh "monkey -p $bgPkg -c android.intent.category.LEANBACK_LAUNCHER 1" | Out-Null
-Start-Sleep -Seconds 10
+Start-Sleep -Seconds 12
 $bg = Get-PssKb
 Sh "input keyevent KEYCODE_HOME" | Out-Null
 

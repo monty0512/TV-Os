@@ -42,6 +42,8 @@ import java.util.Calendar
 
 private enum class Screen { HOME, EDIT, APPEARANCE }
 
+private const val RELEASE_DELAY_MS = 5_000L
+
 @Composable
 fun TvOsRoot(homeEvents: Int, foreground: Boolean) {
     val context = LocalContext.current
@@ -83,11 +85,13 @@ fun TvOsRoot(homeEvents: Int, foreground: Boolean) {
     }
     // Equipo low-RAM: al abrir otra app se sueltan los banners para dejarle memoria,
     // y se recargan al volver al Inicio (mientras tanto se ve el color de cada app).
+    // Se espera unos segundos para no competir con el arranque de la app que se abre;
+    // si se vuelve antes, el efecto se cancela y no se libera nada.
     LaunchedEffect(foreground) {
         if (!reduced) return@LaunchedEffect
         if (!foreground) {
+            delay(RELEASE_DELAY_MS)
             allApps = allApps.withoutBanners()
-            Runtime.getRuntime().gc()
         } else if (allApps.any { it.banner == null }) {
             reloadKey++
         }

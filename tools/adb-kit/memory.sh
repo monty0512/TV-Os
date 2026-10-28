@@ -26,9 +26,9 @@ FG="$(pss_kb)"
 # Una app a pantalla completa (los Ajustes de Android TV son un panel y no ocultan el Inicio).
 BG_PKG="com.google.android.youtube.tv"
 sh_ pm list packages | grep -qx "package:$BG_PKG" || BG_PKG="com.android.vending"
-echo "2/2 · TV-Os en segundo plano: se abre $BG_PKG (esperando 10 s)…"
+echo "2/2 · TV-Os en segundo plano: se abre $BG_PKG (esperando 12 s)…"
 sh_ monkey -p "$BG_PKG" -c android.intent.category.LEANBACK_LAUNCHER 1 >/dev/null
-sleep 10
+sleep 12
 BG="$(pss_kb)"
 sh_ input keyevent KEYCODE_HOME >/dev/null
 
