@@ -92,5 +92,5 @@
     <string name="wx_rain">Lluvia</string>
     <string name="wx_snow">Nieve</string>
     <string name="wx_storm">Tormenta</string>
-    <string name="app_content_title">Para ti en %1$s</string>
+    <string name="shelf_carousel_hint">◀ ▶ ver más · OK para abrir</string>
 </resources>
