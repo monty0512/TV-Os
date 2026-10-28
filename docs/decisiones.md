@@ -59,8 +59,8 @@ Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQ
 ## Fases
 0. Diagnóstico de solo lectura ✅
 1. Inicio, ordenar/ocultar apps, apariencia ✅
-2. Perfiles, bienvenida, Centro de control ← **actual**
-3. Top Shelf + Continuar viendo, fondo desde el móvil, clima
+2. Perfiles, bienvenida, Centro de control ✅ (v0.2.3, verificado en el MiTV)
+3. Top Shelf + Continuar viendo, fondo desde el móvil, clima ← **siguiente**
 4. Kit ADB de limpieza completa con opción de deshacer
 
 ## Fase 2 (decisiones)

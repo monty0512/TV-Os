@@ -23,7 +23,7 @@ Write-Host "  1. Instalar/actualizar TV-Os: $Apk"
 Write-Host ("     (APK compilado el " + (Get-Item $Apk).LastWriteTime.ToString("yyyy-MM-dd HH:mm") + ")")
 Write-Host ("  2. Poner TV-Os como Inicio (antes: " + (Get-CurrentHome) + ")")
 Write-Host "  3. Mantener MiLauncher instalado como respaldo"
-Write-Host "  4. Activar el servicio de accesibilidad de TV-Os (apagar pantalla y botón ≡ desde cualquier app)"
+Write-Host "  4. Activar el servicio de accesibilidad de TV-Os (apagar pantalla; mantener ≡ o SET abre el Centro de control)"
 $ok = Read-Host "¿Continuar? (s/N)"
 if ($ok -notmatch "^(s|si|sí)$") { Write-Host "Cancelado. No se cambió nada."; exit 0 }
 

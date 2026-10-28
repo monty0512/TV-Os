@@ -25,7 +25,7 @@ echo "  1. Instalar/actualizar TV-Os: $APK"
 echo "     (APK compilado el $(date -r "$APK" "+%Y-%m-%d %H:%M"))"
 echo "  2. Poner TV-Os como Inicio (antes: $(current_home))"
 echo "  3. Mantener MiLauncher instalado como respaldo"
-echo "  4. Activar el servicio de accesibilidad de TV-Os (apagar pantalla y botón ≡ desde cualquier app)"
+echo "  4. Activar el servicio de accesibilidad de TV-Os (apagar pantalla; mantener ≡ o SET abre el Centro de control)"
 read -r -p "¿Continuar? (s/N) " ok
 case "$ok" in s|S|si|SI|sí|Sí) ;; *) echo "Cancelado. No se cambió nada."; exit 0 ;; esac
 
