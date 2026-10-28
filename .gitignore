@@ -1,0 +1,9 @@
+# Informes de diagnóstico: contienen datos del dispositivo de cada usuario
+tools/adb-kit/reports/
+
+# Android Studio / Gradle
+.gradle/
+.idea/
+build/
+local.properties
+*.iml
