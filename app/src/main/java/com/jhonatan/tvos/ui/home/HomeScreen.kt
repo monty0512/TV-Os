@@ -71,12 +71,13 @@ import java.util.Date
 
 /** Margen lateral de todo el Inicio. */
 val SidePadding = 48.dp
-private val ShelfHeight = 250.dp
 private val DrawerHeaderHeight = 52.dp
 private const val SHELF_ROTATE_MS = 7_000L
+/** Espacio de la fila de favoritas además del tile: nombre bajo el tile y márgenes. */
+private val FAVORITES_EXTRA = 78.dp
 // Tamaño de decodificación (px) de la imagen del Top Shelf y de las tarjetas: suficiente a 1080p con poca RAM.
-private const val HERO_W = 960
-private const val HERO_H = 540
+private const val HERO_W = 1280
+private const val HERO_H = 720
 
 data class TileSize(val columns: Int, val width: Dp, val height: Dp, val gap: Dp)
 
@@ -125,8 +126,11 @@ fun HomeScreen(
     val shelfLabel = focusedApp?.label
     val shelfTarget = focusedApp?.let { if (t.isDark) darken(it.color, 0.6f) else lighten(it.color, 0.7f) } ?: t.tile
     val shelfColor by animateColorAsState(shelfTarget, tween(if (reduced) 0 else 300), label = "shelf")
+    // Fuera del cajón, el Top Shelf ocupa toda la TV y solo queda visible la fila de favoritas abajo.
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val favoritesArea = size.height + FAVORITES_EXTRA
     val headerHeight by animateDpAsState(
-        targetValue = if (inDrawer) DrawerHeaderHeight else ShelfHeight,
+        targetValue = if (inDrawer) DrawerHeaderHeight else screenHeight - favoritesArea,
         animationSpec = tween(if (reduced) 140 else 260),
         label = "header",
     )
@@ -145,55 +149,71 @@ fun HomeScreen(
     val favorites = apps.take(size.columns)
     val rest = apps.drop(size.columns)
 
-    Column(Modifier.fillMaxSize().background(t.bg)) {
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(headerHeight)
-                .background(if (inDrawer) drawerHeaderColor(t.isDark) else shelfColor),
-        ) {
-            if (inDrawer) {
-                DrawerHeader(focusedApp?.label ?: stringResource(R.string.personalize), onOpenControlCenter)
-            } else {
-                TopShelf(shelfLabel, shelfItems, profileName, weather, onOpenProgram, onOpenControlCenter)
-            }
+    Box(Modifier.fillMaxSize().background(t.bg)) {
+        // Capa de fondo: carrusel a pantalla completa (imagen o color de la app) detrás de la fila de favoritas.
+        if (!inDrawer) {
+            TopShelf(
+                appLabel = shelfLabel,
+                items = shelfItems,
+                background = shelfColor,
+                bottomInset = favoritesArea,
+                profileName = profileName,
+                weather = weather,
+                onOpenProgram = onOpenProgram,
+                onOpenControlCenter = onOpenControlCenter,
+            )
         }
+        Column(Modifier.fillMaxSize()) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(headerHeight)
+                    .then(if (inDrawer) Modifier.background(drawerHeaderColor(t.isDark)) else Modifier),
+            ) {
+                if (inDrawer) {
+                    DrawerHeader(focusedApp?.label ?: stringResource(R.string.personalize), onOpenControlCenter)
+                }
+            }
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(size.columns),
-            state = gridState,
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            contentPadding = PaddingValues(start = SidePadding, end = SidePadding, top = 18.dp, bottom = 48.dp),
-            horizontalArrangement = Arrangement.spacedBy(size.gap),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            itemsIndexed(favorites, key = { _, app -> app.packageName }) { i, app ->
-                AppTile(
-                    app = app,
-                    width = size.width,
-                    height = size.height,
-                    onClick = { onLaunch(app) },
-                    onLongClick = { onEdit(app) },
-                    onFocused = { focusedIdx = i },
-                    modifier = if (i == 0) Modifier.focusRequester(firstFocus) else Modifier,
-                )
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(size.columns),
+                state = gridState,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .then(if (inDrawer) Modifier.background(t.bg) else Modifier),
+                contentPadding = PaddingValues(start = SidePadding, end = SidePadding, top = 18.dp, bottom = 48.dp),
+                horizontalArrangement = Arrangement.spacedBy(size.gap),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                itemsIndexed(favorites, key = { _, app -> app.packageName }) { i, app ->
+                    AppTile(
+                        app = app,
+                        width = size.width,
+                        height = size.height,
+                        onClick = { onLaunch(app) },
+                        onLongClick = { onEdit(app) },
+                        onFocused = { focusedIdx = i },
+                        modifier = if (i == 0) Modifier.focusRequester(firstFocus) else Modifier,
+                    )
+                }
+                itemsIndexed(rest, key = { _, app -> app.packageName }) { i, app ->
+                    AppTile(
+                        app = app,
+                        width = size.width,
+                        height = size.height,
+                        onClick = { onLaunch(app) },
+                        onLongClick = { onEdit(app) },
+                        onFocused = { focusedIdx = size.columns + i },
+                    )
+                }
+                item(key = "personalize") {
+                    PersonalizeTile(size, onClick = onPersonalize, onFocused = { focusedIdx = apps.size })
+                }
             }
-            itemsIndexed(rest, key = { _, app -> app.packageName }) { i, app ->
-                AppTile(
-                    app = app,
-                    width = size.width,
-                    height = size.height,
-                    onClick = { onLaunch(app) },
-                    onLongClick = { onEdit(app) },
-                    onFocused = { focusedIdx = size.columns + i },
-                )
+            if (loading && apps.isEmpty()) {
+                TvText(stringResource(R.string.loading_apps), 16.sp, color = t.fgMuted, modifier = Modifier.padding(start = SidePadding))
             }
-            item(key = "personalize") {
-                PersonalizeTile(size, onClick = onPersonalize, onFocused = { focusedIdx = apps.size })
-            }
-        }
-        if (loading && apps.isEmpty()) {
-            TvText(stringResource(R.string.loading_apps), 16.sp, color = t.fgMuted, modifier = Modifier.padding(start = SidePadding))
         }
     }
 }
@@ -209,6 +229,9 @@ private fun drawerHeaderColor(dark: Boolean) = if (dark) Color(0xFF141416) else 
 private fun TopShelf(
     appLabel: String?,
     items: List<ShelfItem>,
+    background: Color,
+    /** Alto reservado abajo para la fila de favoritas (el texto del carrusel queda encima). */
+    bottomInset: Dp,
     profileName: String,
     weather: WeatherNow?,
     onOpenProgram: (ShelfItem) -> Unit,
@@ -231,18 +254,25 @@ private fun TopShelf(
         hero = item?.imageUri?.let { Images.load(context, it, HERO_W, HERO_H) }
     }
 
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().background(background)) {
         val image = hero
         if (item != null && image != null) {
             Image(image, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-            // Velo para que el texto se lea sobre cualquier imagen.
-            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.45f)))
+            // Velo para que el texto se lea sobre cualquier imagen, más oscuro detrás de la fila de favoritas.
+            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.35f)))
+            Box(
+                Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .height(bottomInset)
+                    .background(Color.Black.copy(alpha = 0.35f)),
+            )
         }
         val onImage = item != null && image != null
         val fg = if (onImage) Color.White else t.fg
         val muted = if (onImage) Color(0xFFE5E5EA) else t.fgMuted
 
-        Box(Modifier.fillMaxSize().padding(horizontal = SidePadding, vertical = 22.dp)) {
+        Box(Modifier.fillMaxSize().padding(start = SidePadding, end = SidePadding, top = 22.dp, bottom = bottomInset + 12.dp)) {
             TvText(
                 text = greeting(profileName),
                 size = 18.sp,
@@ -282,7 +312,7 @@ private fun TopShelf(
                 ) {
                     TvText(appLabel?.uppercase() ?: "", 12.sp, weight = FontWeight.SemiBold, color = muted)
                     Spacer(Modifier.height(4.dp))
-                    TvText(item.title, 40.sp, weight = FontWeight.Bold, color = fg)
+                    TvText(item.title, 48.sp, weight = FontWeight.Bold, color = fg, maxLines = 2)
                     item.subtitle?.let {
                         Spacer(Modifier.height(4.dp))
                         TvText(it, 15.sp, color = muted, maxLines = 2)
@@ -312,7 +342,7 @@ private fun TopShelf(
                 Column(Modifier.align(Alignment.BottomStart)) {
                     TvText(stringResource(R.string.shelf_no_channel), 13.sp, color = muted)
                     Spacer(Modifier.height(4.dp))
-                    TvText(appLabel ?: stringResource(R.string.loading_apps), 48.sp, weight = FontWeight.Bold, color = fg)
+                    TvText(appLabel ?: stringResource(R.string.loading_apps), 64.sp, weight = FontWeight.Bold, color = fg)
                     Spacer(Modifier.height(4.dp))
                     TvText(stringResource(R.string.shelf_hint), 13.sp, color = muted)
                 }

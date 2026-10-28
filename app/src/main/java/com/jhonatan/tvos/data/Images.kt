@@ -21,7 +21,7 @@ import java.net.URL
  */
 object Images {
     private const val MAX_BYTES = 6 * 1024 * 1024
-    private val cache = LruCache<String, ImageBitmap>(8)
+    private val cache = LruCache<String, ImageBitmap>(5)
     private val failed = java.util.Collections.synchronizedSet(HashSet<String>())
 
     suspend fun load(context: Context, uri: String, maxWidth: Int, maxHeight: Int): ImageBitmap? {

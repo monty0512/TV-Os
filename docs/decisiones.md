@@ -80,8 +80,9 @@ Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQ
 | Saludo | "Buenos días / Buenas tardes / Buenas noches, [perfil]" en el Top Shelf (5–11 h, 12–18 h, resto) |
 | Bienvenida | Al elegir perfil o terminar la bienvenida: avatar + "¡Hola, [perfil]!" durante 1,8 s |
 | Top Shelf con contenido | Canales de vista previa (TvProvider, `READ_TV_LISTINGS` por `pm grant`, verificado); rota cada 7 s; sin contenido → color + nombre |
-| Contenido por app | Solo arriba, en carrusel: Watch Next de la app enfocada + sus recomendaciones; ▲ entra, ◀ ▶ navega, OK abre |
+| Contenido por app | Carrusel a pantalla completa con la fila de favoritas encima (abajo): Watch Next de la app enfocada + sus recomendaciones; ▲ entra, ◀ ▶ navega, OK abre |
 | Clima | ipapi.co (respaldo ipwho.is) + Open-Meteo, sin clave; cada 30 min con TV-Os en pantalla |
 | Imagen | Acción `com.mitv.settings.PICTURE_SETTINGS` (encontrada con dumpsys) |
 | Fase 3B | Fondo del perfil desde el móvil (QR + servidor local) |
 | Internet tras añadir el permiso | `EPERM` hasta reiniciar la TV: el permiso se añadió en una actualización (verificado) |
+| YouTube | No publica canales ni Watch Next para launchers de terceros en el MiTV (verificado): muestra color y nombre |
