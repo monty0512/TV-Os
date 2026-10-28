@@ -73,8 +73,11 @@ import java.util.Date
 val SidePadding = 48.dp
 private val DrawerHeaderHeight = 52.dp
 private const val SHELF_ROTATE_MS = 7_000L
-/** Espacio de la fila de favoritas además del tile: nombre bajo el tile y márgenes. */
-private val FAVORITES_EXTRA = 78.dp
+/**
+ * Alto de la fila de favoritas además del tile: margen superior de la cuadrícula (18) + espacio y nombre
+ * bajo el tile (~26). La segunda fila empieza más abajo (+12 de separación), así que queda oculta.
+ */
+private val FAVORITES_EXTRA = 48.dp
 // Tamaño de decodificación (px) de la imagen del Top Shelf y de las tarjetas: suficiente a 1080p con poca RAM.
 private const val HERO_W = 1280
 private const val HERO_H = 720
