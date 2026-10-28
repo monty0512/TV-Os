@@ -57,7 +57,7 @@ powershell -ExecutionPolicy Bypass -File .\restore-home.ps1 192.168.1.50
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\memory.ps1 192.168.1.50
 ```
-Objetivo: **menos de 70 MB PSS** con el Inicio en pantalla. El script también mide TV-Os en segundo plano (abre los Ajustes): ahí debe bajar porque se liberan los banners.
+Objetivo: **menos de 70 MB PSS** con el Inicio en pantalla. El script también mide TV-Os en segundo plano (abre YouTube unos segundos): ahí debe bajar porque se liberan los banners.
 
 ## Archivos
 | Archivo | Uso |

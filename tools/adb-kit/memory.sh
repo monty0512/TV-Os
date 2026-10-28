@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # TV-Os · Mide la memoria del Inicio en pantalla y en segundo plano. No modifica nada.
 # Objetivo: < 70 MB PSS en pantalla; en segundo plano debe bajar (banners liberados).
+# Abre YouTube (o Play Store) unos segundos y vuelve al Inicio.
 set -u
 DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$DIR/common.sh"
@@ -22,8 +23,11 @@ sleep 8
 FG="$(pss_kb)"
 [ -z "$FG" ] && { echo "No se pudo leer la memoria. ¿Está TV-Os instalado como Inicio?"; exit 1; }
 
-echo "2/2 · TV-Os en segundo plano: se abren los Ajustes (esperando 10 s)…"
-sh_ am start -a android.settings.SETTINGS >/dev/null
+# Una app a pantalla completa (los Ajustes de Android TV son un panel y no ocultan el Inicio).
+BG_PKG="com.google.android.youtube.tv"
+sh_ pm list packages | grep -qx "package:$BG_PKG" || BG_PKG="com.android.vending"
+echo "2/2 · TV-Os en segundo plano: se abre $BG_PKG (esperando 10 s)…"
+sh_ monkey -p "$BG_PKG" -c android.intent.category.LEANBACK_LAUNCHER 1 >/dev/null
 sleep 10
 BG="$(pss_kb)"
 sh_ input keyevent KEYCODE_HOME >/dev/null

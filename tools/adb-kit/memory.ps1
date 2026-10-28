@@ -1,5 +1,6 @@
 ﻿# TV-Os · Mide la memoria del Inicio en pantalla y en segundo plano. No modifica nada.
 # Objetivo: < 70 MB PSS en pantalla; en segundo plano debe bajar (banners liberados).
+# Abre YouTube (o Play Store) unos segundos y vuelve al Inicio.
 param([string]$Target = "")
 . (Join-Path $PSScriptRoot "common.ps1")
 Connect-Tv $Target
@@ -21,8 +22,11 @@ Start-Sleep -Seconds 8
 $fg = Get-PssKb
 if (-not $fg) { Write-Host "No se pudo leer la memoria. ¿Está TV-Os instalado como Inicio?"; exit 1 }
 
-Write-Host "2/2 · TV-Os en segundo plano: se abren los Ajustes (esperando 10 s)…"
-Sh "am start -a android.settings.SETTINGS" | Out-Null
+# Una app a pantalla completa (los Ajustes de Android TV son un panel y no ocultan el Inicio).
+$bgPkg = "com.google.android.youtube.tv"
+if (-not ((Sh "pm list packages") -contains "package:$bgPkg")) { $bgPkg = "com.android.vending" }
+Write-Host "2/2 · TV-Os en segundo plano: se abre $bgPkg (esperando 10 s)…"
+Sh "monkey -p $bgPkg -c android.intent.category.LEANBACK_LAUNCHER 1" | Out-Null
 Start-Sleep -Seconds 10
 $bg = Get-PssKb
 Sh "input keyevent KEYCODE_HOME" | Out-Null
