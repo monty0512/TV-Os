@@ -69,6 +69,7 @@ Objetivo: **menos de 70 MB PSS** con el Inicio en pantalla. El script también m
 | `restore-home.*` | Vuelve a MiLauncher como Inicio |
 | `memory.*` | Mide la memoria de TV-Os |
 | `launch-time.*` | Mide cuánto tarda en abrir Netflix y Disney+ desde cero |
+| `logs.*` | Registra teclas del mando y aperturas de apps para diagnosticar fallos |
 | `common.*` | Funciones compartidas |
 | `debloat-list.txt` | Lista de limpieza (se aplica en la Fase 4) |
 

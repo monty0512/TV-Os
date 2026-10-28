@@ -39,6 +39,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -88,6 +90,7 @@ fun HomeScreen(
     onLaunch: (TvApp) -> Unit,
     onEdit: (TvApp) -> Unit,
     onPersonalize: () -> Unit,
+    onOpenControlCenter: () -> Unit,
 ) {
     val t = LocalTv.current
     val reduced = LocalReducedEffects.current
@@ -125,9 +128,9 @@ fun HomeScreen(
                 .padding(horizontal = SidePadding),
         ) {
             if (inDrawer) {
-                DrawerHeader(focusedApp?.label ?: stringResource(R.string.personalize))
+                DrawerHeader(focusedApp?.label ?: stringResource(R.string.personalize), onOpenControlCenter)
             } else {
-                TopShelf(focusedApp)
+                TopShelf(focusedApp, onOpenControlCenter)
             }
         }
 
@@ -163,7 +166,7 @@ fun HomeScreen(
 private fun drawerHeaderColor(dark: Boolean) = if (dark) Color(0xFF141416) else Color(0xFFE5E5EA)
 
 @Composable
-private fun TopShelf(focusedApp: TvApp?) {
+private fun TopShelf(focusedApp: TvApp?, onOpenControlCenter: () -> Unit) {
     val t = LocalTv.current
     Box(Modifier.fillMaxSize().padding(vertical = 24.dp)) {
         TvText(
@@ -173,7 +176,14 @@ private fun TopShelf(focusedApp: TvApp?) {
             color = t.fgMuted,
             modifier = Modifier.align(Alignment.TopStart),
         )
-        Clock(Modifier.align(Alignment.TopEnd))
+        Row(
+            Modifier.align(Alignment.TopEnd),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ControlCenterButton(onOpenControlCenter)
+            Clock()
+        }
         Column(Modifier.align(Alignment.BottomStart)) {
             TvText(stringResource(R.string.shelf_no_channel), 13.sp, color = t.fgMuted)
             Spacer(Modifier.height(4.dp))
@@ -189,7 +199,7 @@ private fun TopShelf(focusedApp: TvApp?) {
 }
 
 @Composable
-private fun DrawerHeader(focusedLabel: String) {
+private fun DrawerHeader(focusedLabel: String, onOpenControlCenter: () -> Unit) {
     val t = LocalTv.current
     Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
         TvText(stringResource(R.string.all_apps), 12.sp, weight = FontWeight.SemiBold, color = t.fgMuted)
@@ -197,6 +207,8 @@ private fun DrawerHeader(focusedLabel: String) {
         TvText(focusedLabel, 18.sp, weight = FontWeight.Bold, modifier = Modifier.weight(1f))
         TvText(stringResource(R.string.drawer_hint), 13.sp, color = t.fgMuted)
         Spacer(Modifier.size(18.dp))
+        ControlCenterButton(onOpenControlCenter)
+        Spacer(Modifier.size(16.dp))
         Clock()
     }
 }
@@ -226,6 +238,30 @@ private fun PersonalizeTile(size: TileSize, onClick: () -> Unit, onFocused: () -
             weight = FontWeight.SemiBold,
             color = if (focused) t.tileFocusedFg else t.fg,
         )
+    }
+}
+
+/** Abre el Centro de control (▲ desde la primera fila). Funciona con cualquier mando. */
+@Composable
+private fun ControlCenterButton(onClick: () -> Unit) {
+    val t = LocalTv.current
+    var focused by remember { mutableStateOf(false) }
+    val fg = if (focused) t.tileFocusedFg else t.fg
+    Box(
+        Modifier
+            .size(40.dp)
+            .background(if (focused) t.tileFocused else t.tile.copy(alpha = 0.6f), RoundedCornerShape(20.dp))
+            .then(if (focused) Modifier.border(t.borderWidth, t.focusBorder, RoundedCornerShape(20.dp)) else Modifier)
+            .semantics { contentDescription = "Control center" }
+            .remoteClickable(onClick = onClick, onFocus = { focused = it }),
+        contentAlignment = Alignment.Center,
+    ) {
+        // Icono de deslizadores dibujado con cajas (sin depender de fuentes con símbolos).
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            listOf(18.dp, 12.dp, 16.dp).forEach { w ->
+                Box(Modifier.size(w, 2.dp).background(fg, RoundedCornerShape(1.dp)))
+            }
+        }
     }
 }
 

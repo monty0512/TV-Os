@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.util.Log
 import android.view.KeyEvent as NativeKeyEvent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -47,6 +48,8 @@ import kotlinx.coroutines.launch
 import java.util.Calendar
 
 private enum class Screen { ONBOARDING, PROFILES, HOME, EDIT, APPEARANCE }
+
+private const val LOG_TAG = "TvOs"
 
 @Composable
 fun TvOsRoot(homeEvents: Int, controlCenterEvents: Int, foreground: Boolean, trimEvents: Int) {
@@ -177,6 +180,10 @@ fun TvOsRoot(homeEvents: Int, controlCenterEvents: Int, foreground: Boolean, tri
                 .onPreviewKeyEvent { event ->
                     // Botón ≡ del mando: abre o cierra el Centro de control.
                     val n = event.nativeKeyEvent
+                    // Diagnóstico: qué teclas del mando llegan a TV-Os (tools/adb-kit/logs.*).
+                    if (n.action == NativeKeyEvent.ACTION_DOWN && n.repeatCount == 0) {
+                        Log.d(LOG_TAG, "key ${NativeKeyEvent.keyCodeToString(n.keyCode)} (${n.keyCode})")
+                    }
                     if (n.keyCode != NativeKeyEvent.KEYCODE_MENU || !canOpenControlCenter) return@onPreviewKeyEvent false
                     if (n.action == NativeKeyEvent.ACTION_UP) controlCenterOpen = !controlCenterOpen
                     true
@@ -213,6 +220,7 @@ fun TvOsRoot(homeEvents: Int, controlCenterEvents: Int, foreground: Boolean, tri
                     loading = loading,
                     homeEvents = homeEvents,
                     onLaunch = { app ->
+                        Log.i(LOG_TAG, "launch ${app.packageName}")
                         repo.launchIntent(app.packageName)?.let { runCatching { context.startActivity(it) } }
                     },
                     onEdit = { app ->
@@ -221,6 +229,7 @@ fun TvOsRoot(homeEvents: Int, controlCenterEvents: Int, foreground: Boolean, tri
                         screen = Screen.EDIT
                     },
                     onPersonalize = { screen = Screen.APPEARANCE },
+                    onOpenControlCenter = { controlCenterOpen = true },
                 )
 
                 Screen.EDIT -> EditScreen(
