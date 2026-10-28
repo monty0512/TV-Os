@@ -152,8 +152,11 @@ fun AppearanceScreen(
             })
         }
 
+        val version = remember {
+            runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "?"
+        }
         TvText(
-            text = stringResource(if (LocalReducedEffects.current) R.string.perf_reduced else R.string.perf_full),
+            text = "TV-Os $version · " + stringResource(if (LocalReducedEffects.current) R.string.perf_reduced else R.string.perf_full),
             size = 13.sp,
             color = t.fgMuted,
         )

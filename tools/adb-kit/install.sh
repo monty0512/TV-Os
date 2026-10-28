@@ -22,6 +22,7 @@ connect_tv "${1:-}"
 
 echo "Se va a hacer en la TV:"
 echo "  1. Instalar/actualizar TV-Os: $APK"
+echo "     (APK compilado el $(date -r "$APK" "+%Y-%m-%d %H:%M"))"
 echo "  2. Poner TV-Os como Inicio (antes: $(current_home))"
 echo "  3. Mantener MiLauncher instalado como respaldo"
 echo "  4. Permitir que TV-Os apague la pantalla (temporizador y botón Apagar del Centro de control)"
@@ -31,6 +32,7 @@ case "$ok" in s|S|si|SI|sí|Sí) ;; *) echo "Cancelado. No se cambió nada."; ex
 echo "Instalando…"
 "${ADB_DEV[@]}" install -r "$APK" || { echo "ERROR: falló la instalación."; exit 1; }
 
+echo "Versión instalada: $(sh_ dumpsys package "$TVOS_PKG" | grep -m1 versionName= | sed 's/.*versionName=//')"
 echo "Poniendo TV-Os como Inicio…"
 sh_ cmd package set-home-activity "$TVOS_HOME"
 NOW="$(current_home)"

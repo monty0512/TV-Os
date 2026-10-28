@@ -20,6 +20,7 @@ Connect-Tv $Target
 
 Write-Host "Se va a hacer en la TV:"
 Write-Host "  1. Instalar/actualizar TV-Os: $Apk"
+Write-Host ("     (APK compilado el " + (Get-Item $Apk).LastWriteTime.ToString("yyyy-MM-dd HH:mm") + ")")
 Write-Host ("  2. Poner TV-Os como Inicio (antes: " + (Get-CurrentHome) + ")")
 Write-Host "  3. Mantener MiLauncher instalado como respaldo"
 Write-Host "  4. Permitir que TV-Os apague la pantalla (temporizador y botón Apagar del Centro de control)"
@@ -30,6 +31,8 @@ Write-Host "Instalando…"
 & $script:Adb @script:AdbArgs install -r "$Apk"
 if ($LASTEXITCODE -ne 0) { Write-Host "ERROR: falló la instalación."; exit 1 }
 
+$ver = (Sh "dumpsys package $script:TvosPkg") | Where-Object { $_ -match "versionName=" } | Select-Object -First 1
+Write-Host ("Versión instalada: " + ($ver -replace ".*versionName=", ""))
 Write-Host "Poniendo TV-Os como Inicio…"
 Sh "cmd package set-home-activity $script:TvosHome" | Out-Null
 $now = Get-CurrentHome
