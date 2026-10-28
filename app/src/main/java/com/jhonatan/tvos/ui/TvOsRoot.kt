@@ -48,10 +48,8 @@ import java.util.Calendar
 
 private enum class Screen { ONBOARDING, PROFILES, HOME, EDIT, APPEARANCE }
 
-private const val RELEASE_DELAY_MS = 5_000L
-
 @Composable
-fun TvOsRoot(homeEvents: Int, controlCenterEvents: Int, foreground: Boolean) {
+fun TvOsRoot(homeEvents: Int, controlCenterEvents: Int, foreground: Boolean, trimEvents: Int) {
     val context = LocalContext.current
     val store = remember { ProfileStore(context.applicationContext) }
     val repo = remember { AppRepository(context.applicationContext) }
@@ -108,18 +106,14 @@ fun TvOsRoot(homeEvents: Int, controlCenterEvents: Int, foreground: Boolean) {
         allApps = if (isForeground || !reduced) loaded else loaded.withoutBanners()
         loading = false
     }
-    // Equipo low-RAM: al abrir otra app se sueltan los banners para dejarle memoria,
-    // y se recargan al volver al Inicio (mientras tanto se ve el color de cada app).
-    // Se espera unos segundos para no competir con el arranque de la app que se abre;
-    // si se vuelve antes, el efecto se cancela y no se libera nada.
+    // Equipo low-RAM: los banners se sueltan solo cuando Android pide memoria con TV-Os en
+    // segundo plano (no en cada cambio de app: recargarlos al volver retrasaba abrir la siguiente).
+    // Se recargan al volver al Inicio; mientras tanto se ve el color de cada app.
+    LaunchedEffect(trimEvents) {
+        if (trimEvents > 0 && reduced && !isForeground) allApps = allApps.withoutBanners()
+    }
     LaunchedEffect(foreground) {
-        if (!reduced) return@LaunchedEffect
-        if (!foreground) {
-            delay(RELEASE_DELAY_MS)
-            allApps = allApps.withoutBanners()
-        } else if (allApps.any { it.banner == null }) {
-            reloadKey++
-        }
+        if (foreground && allApps.any { it.banner == null }) reloadKey++
     }
     // Hora para el tema automático.
     LaunchedEffect(Unit) {

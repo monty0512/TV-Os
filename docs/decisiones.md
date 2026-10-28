@@ -46,7 +46,7 @@ Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQ
 | Liberar memoria | Botón en el Centro de control (`killBackgroundProcesses`) |
 
 ## Arquitectura
-- Kotlin + Jetpack Compose for TV, `minSdk 29` (Android 10), solo `armeabi-v7a`/sin código nativo. Presupuesto de memoria: < 70 MB PSS en Inicio (medido 78 MB antes de optimizar; ~20 MB son búferes de pantalla 1080p, fijos). Banners RGB_565 y liberados en segundo plano.
+- Kotlin + Jetpack Compose for TV, `minSdk 29` (Android 10), solo `armeabi-v7a`/sin código nativo. Presupuesto de memoria: < 70 MB PSS en Inicio (medido 78 MB antes de optimizar; ~20 MB son búferes de pantalla 1080p, fijos). Banners RGB_565, liberados solo cuando Android pide memoria (onTrimMemory) con TV-Os en segundo plano.
 - DataStore (ajustes) + Room (perfiles). Sin servicios en la nube.
 - Módulos: `home`, `controlcenter`, `profiles`, `settings`, `onboarding`, `wallpaper`, `weather`, `perf`.
 - `tools/adb-kit/`: diagnóstico, instalación, limpieza y restauración.
