@@ -11,10 +11,10 @@ OUT="$DIR/reports/logs-$(date +%Y%m%d-%H%M%S).txt"
 "${ADB_DEV[@]}" logcat -c
 echo "Registro en marcha. En la TV:"
 echo "  1. Pulsa el botón ≡ y otros botones del mando estando en el Inicio de TV-Os."
-echo "  2. Abre Netflix desde TV-Os."
+echo "  2. Abre Netflix desde TV-Os y espera 30 segundos aunque se quede en negro."
 read -r -p "Cuando termines, pulsa Enter aquí… " _
 "${ADB_DEV[@]}" logcat -d -v time | tr -d '\r' \
-  | grep -E "TvOs|START u0|Start proc|Displayed|ActivityTaskManager: (START|Force)|am_proc_died|Killing" >"$OUT"
+  | grep -E "TvOs|START u0|Start proc|Displayed|ActivityTaskManager: (START|Force)|am_proc_died|Killing|lowmemorykiller|lmkd|has died|died|ANR|FATAL|[Nn]etflix" >"$OUT"
 echo
 echo "== Teclas que recibió TV-Os =="
 grep -E "TvOs.*key " "$OUT" | sed 's/.*key /  /' | sort | uniq -c

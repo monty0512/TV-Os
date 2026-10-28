@@ -43,7 +43,12 @@ if ($now -eq $script:TvosHome -or $now -eq "$script:TvosPkg/$script:TvosPkg.Main
 }
 Write-Host "Activando el apagado desde TV-Os…"
 $adminOut = (Sh "dpm set-active-admin --user 0 $script:TvosAdmin") -join " "
-if ($adminOut -match "Success|already") { Write-Host "OK: apagado activado" } else { Write-Host "AVISO: no se pudo activar el apagado: $adminOut" }
+$policy = (Sh "dumpsys device_policy") -join "`n"
+if ($policy -match [regex]::Escape("com.jhonatan.tvos/.system.TvOsAdminReceiver")) {
+    Write-Host "OK: apagado activado"
+} else {
+    Write-Host "AVISO: el apagado NO quedó activado. Respuesta del sistema: $adminOut"
+}
 Sh "input keyevent KEYCODE_HOME" | Out-Null
 Write-Host ""
 Write-Host "Listo. Para volver a MiLauncher: .\restore-home.ps1 $Target"

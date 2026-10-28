@@ -43,10 +43,11 @@ else
 fi
 echo "Activando el apagado desde TV-Os…"
 ADMIN_OUT="$(sh_ dpm set-active-admin --user 0 "$TVOS_ADMIN")"
-case "$ADMIN_OUT" in
-  *Success*|*already*) echo "OK: apagado activado" ;;
-  *) echo "AVISO: no se pudo activar el apagado: $ADMIN_OUT" ;;
-esac
+if sh_ dumpsys device_policy | grep -q "com.jhonatan.tvos/.system.TvOsAdminReceiver"; then
+  echo "OK: apagado activado"
+else
+  echo "AVISO: el apagado NO quedó activado. Respuesta del sistema: $ADMIN_OUT"
+fi
 sh_ input keyevent KEYCODE_HOME >/dev/null
 echo
 echo "Listo. Para volver a MiLauncher: ./restore-home.sh ${1:-}"

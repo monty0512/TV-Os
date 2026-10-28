@@ -10,11 +10,11 @@ $outFile = Join-Path $dir ("logs-{0}.txt" -f (Get-Date -Format "yyyyMMdd-HHmmss"
 & $script:Adb @script:AdbArgs logcat -c
 Write-Host "Registro en marcha. En la TV:"
 Write-Host "  1. Pulsa el botón ≡ y otros botones del mando estando en el Inicio de TV-Os."
-Write-Host "  2. Abre Netflix desde TV-Os."
+Write-Host "  2. Abre Netflix desde TV-Os y espera 30 segundos aunque se quede en negro."
 Read-Host "Cuando termines, pulsa Enter aquí…" | Out-Null
 
 $lines = & $script:Adb @script:AdbArgs logcat -d -v time | ForEach-Object { "$_".TrimEnd("`r") } |
-    Where-Object { $_ -match "TvOs|START u0|Start proc|Displayed|ActivityTaskManager: (START|Force)|am_proc_died|Killing" }
+    Where-Object { $_ -match "TvOs|START u0|Start proc|Displayed|ActivityTaskManager: (START|Force)|am_proc_died|Killing|lowmemorykiller|lmkd|has died|died|ANR|FATAL|[Nn]etflix" }
 $lines | Set-Content -Path $outFile -Encoding UTF8
 
 Write-Host ""
