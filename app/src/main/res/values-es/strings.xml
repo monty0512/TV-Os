@@ -105,4 +105,12 @@
     <string name="wp_waiting">Esperando foto…</string>
     <string name="wp_received">¡Foto recibida!</string>
     <string name="wp_no_network">La TV no tiene red: revisa la Wi-Fi</string>
+    <string name="wp_page_heading">Enviar fondo a la TV</string>
+    <string name="wp_page_note">La foto se recorta a formato de pantalla (16:9) y queda como fondo de tu perfil.</string>
+    <string name="av_open">Foto de perfil desde el móvil</string>
+    <string name="av_profile">Foto de perfil · %1$s</string>
+    <string name="av_title">Envía tu foto de perfil desde el móvil</string>
+    <string name="av_page_heading">Enviar foto de perfil a la TV</string>
+    <string name="av_page_note">La foto se recorta en un cuadrado centrado y sustituye a tu inicial en la TV.</string>
+    <string name="av_remove">Quitar foto</string>
 </resources>

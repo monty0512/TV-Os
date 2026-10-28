@@ -23,6 +23,9 @@ import java.net.SocketTimeoutException
  */
 class WallpaperServer(
     private val code: String,
+    /** Título y explicación de la página que ve el móvil. */
+    private val heading: String,
+    private val note: String,
     private val onPhoto: (ByteArray) -> Boolean,
 ) {
     private var server: ServerSocket? = null
@@ -70,7 +73,7 @@ class WallpaperServer(
         }
         val (method, path) = requestLine.split(' ').let { it.getOrNull(0) to it.getOrNull(1) }
         val response = when {
-            method == "GET" && (path == "/" || path?.startsWith("/?") == true) -> page(PAGE_FORM)
+            method == "GET" && (path == "/" || path?.startsWith("/?") == true) -> page(form(heading, note))
             method == "POST" && path == "/upload" -> upload(input, headers)
             else -> page(message("No encontrado"), "404 Not Found")
         }
@@ -99,7 +102,7 @@ class WallpaperServer(
         val photo = parts["photo"]?.takeIf { it.isNotEmpty() }
             ?: return page(message("No se recibió ninguna foto"), "400 Bad Request")
         return if (onPhoto(photo)) {
-            page(message("¡Listo! La foto ya es el fondo de tu perfil en la TV."))
+            page(message("¡Listo! La foto ya está en la TV."))
         } else {
             page(message("No se pudo leer la foto. Prueba con otra en formato JPG o PNG."), "400 Bad Request")
         }
@@ -170,9 +173,9 @@ class WallpaperServer(
             "background:#1c1c1e;color:#f5f5f7}button{margin-top:24px;width:100%;padding:14px;font-size:18px;font-weight:600;" +
             "border:0;border-radius:12px;background:#0a84ff;color:#fff}p{color:#c7c7cc;line-height:1.5}</style>"
 
-        private val PAGE_FORM = "<!doctype html><html lang=\"es\"><head><meta charset=\"utf-8\">" +
-            "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>TV-Os · Fondo</title>$STYLE</head><body>" +
-            "<h1>Enviar fondo a la TV</h1><p>La foto se recorta a formato de pantalla (16:9) y queda como fondo de tu perfil.</p>" +
+        private fun form(heading: String, note: String) = "<!doctype html><html lang=\"es\"><head><meta charset=\"utf-8\">" +
+            "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>TV-Os</title>$STYLE</head><body>" +
+            "<h1>$heading</h1><p>$note</p>" +
             "<form method=\"post\" action=\"/upload\" enctype=\"multipart/form-data\">" +
             "<label for=\"code\">Código que aparece en la TV</label>" +
             "<input id=\"code\" name=\"code\" inputmode=\"numeric\" maxlength=\"4\" required autocomplete=\"off\">" +

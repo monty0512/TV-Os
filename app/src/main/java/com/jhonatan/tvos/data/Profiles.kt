@@ -23,6 +23,8 @@ data class Profile(
     val settings: UserSettings = UserSettings(),
     /** Momento en que se cambió el fondo enviado desde el móvil; 0 = sin fondo. */
     val backgroundVersion: Long = 0,
+    /** Momento en que se cambió la foto de perfil enviada desde el móvil; 0 = inicial con color. */
+    val avatarVersion: Long = 0,
 )
 
 data class ProfilesState(
@@ -85,6 +87,11 @@ class ProfileStore(private val context: Context) {
         s.copy(profiles = s.profiles.map { if (it.id == id) it.copy(backgroundVersion = version) else it })
     }
 
+    /** version = 0 quita la foto. */
+    suspend fun setAvatar(id: String, version: Long) = edit { s ->
+        s.copy(profiles = s.profiles.map { if (it.id == id) it.copy(avatarVersion = version) else it })
+    }
+
     suspend fun removeProfile(id: String) = edit { s ->
         if (s.profiles.size <= 1) return@edit s
         val rest = s.profiles.filterNot { it.id == id }
@@ -112,6 +119,7 @@ class ProfileStore(private val context: Context) {
                 name = o.optString("name"),
                 color = o.optInt("color", 0),
                 backgroundVersion = o.optLong("bgVersion", 0),
+                avatarVersion = o.optLong("avatarVersion", 0),
                 settings = UserSettings.fromJson(o.optJSONObject("settings")),
             )
         }
@@ -127,6 +135,7 @@ class ProfileStore(private val context: Context) {
                     .put("name", it.name)
                     .put("color", it.color)
                     .put("bgVersion", it.backgroundVersion)
+                    .put("avatarVersion", it.avatarVersion)
                     .put("settings", it.settings.toJson()),
             )
         }

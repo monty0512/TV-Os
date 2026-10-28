@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.jhonatan.tvos.data.AppRepository
 import com.jhonatan.tvos.data.Backgrounds
+import com.jhonatan.tvos.data.PhotoKind
 import com.jhonatan.tvos.data.Images
 import com.jhonatan.tvos.data.Profile
 import com.jhonatan.tvos.data.ShelfItem
@@ -84,6 +85,7 @@ fun TvOsRoot(
     var controlCenterOpen by rememberSaveable { mutableStateOf(false) }
     var editReturn by rememberSaveable { mutableStateOf(Screen.HOME) }
     var editInitial by rememberSaveable { mutableStateOf<String?>(null) }
+    var photoKind by rememberSaveable { mutableStateOf(PhotoKind.BACKGROUND) }
     var hour by remember { mutableIntStateOf(Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) }
     var shelfContent by remember { mutableStateOf<Map<String, List<ShelfItem>>>(emptyMap()) }
     var watchNext by remember { mutableStateOf<List<ShelfItem>>(emptyList()) }
@@ -210,7 +212,7 @@ fun TvOsRoot(
     }
 
     // Fondo del perfil activo (enviado desde el móvil).
-    val backgroundUri = state.active?.let { Backgrounds.uri(context, it) }
+    val backgroundUri = state.active?.let { Backgrounds.uri(context, PhotoKind.BACKGROUND, it) }
     LaunchedEffect(backgroundUri) {
         profileBackground = backgroundUri?.let { Images.load(context, it, 1280, 720) }
     }
@@ -269,7 +271,7 @@ fun TvOsRoot(
                     },
                     onAdd = { name, color -> scope.launch { store.addProfile(name, color) } },
                     onRemove = { id ->
-                        Backgrounds.delete(context, id)
+                        Backgrounds.deleteAll(context, id)
                         scope.launch { store.removeProfile(id) }
                     },
                 )
@@ -331,31 +333,43 @@ fun TvOsRoot(
                         editReturn = Screen.APPEARANCE
                         screen = Screen.EDIT
                     },
-                    onPhoneWallpaper = { screen = Screen.PHONE_WALLPAPER },
+                    onPhoneWallpaper = {
+                        photoKind = PhotoKind.BACKGROUND
+                        screen = Screen.PHONE_WALLPAPER
+                    },
+                    onPhoneAvatar = {
+                        photoKind = PhotoKind.AVATAR
+                        screen = Screen.PHONE_WALLPAPER
+                    },
                     onBack = { screen = Screen.HOME },
                 )
 
                 Screen.PHONE_WALLPAPER -> {
                     val profile = state.active
-                    PhoneWallpaperScreen(
-                        profileName = profile?.name.orEmpty(),
-                        hasBackground = (profile?.backgroundVersion ?: 0L) != 0L,
-                        onPhoto = { bytes ->
-                            // Se llama desde el hilo del servidor: se guarda aquí y se avisa al perfil.
-                            val id = profile?.id
-                            val ok = id != null && runCatching { Backgrounds.save(context, id, bytes) }.getOrDefault(false)
-                            if (ok && id != null) scope.launch { store.setBackground(id, System.currentTimeMillis()) }
-                            ok
-                        },
-                        onRemove = {
-                            profile?.let {
-                                Backgrounds.delete(context, it.id)
-                                scope.launch { store.setBackground(it.id, 0) }
-                            }
-                            screen = Screen.APPEARANCE
-                        },
-                        onBack = { screen = Screen.APPEARANCE },
-                    )
+                    if (profile != null) {
+                        val kind = photoKind
+                        // Fondo y foto de perfil comparten pantalla; solo cambia dónde se guarda la versión.
+                        suspend fun setVersion(id: String, version: Long) =
+                            if (kind == PhotoKind.AVATAR) store.setAvatar(id, version) else store.setBackground(id, version)
+                        PhoneWallpaperScreen(
+                            kind = kind,
+                            profileName = profile.name,
+                            hasPhoto = Backgrounds.uri(context, kind, profile) != null,
+                            onPhoto = { bytes ->
+                                // Se llama desde el hilo del servidor: se guarda aquí y se avisa al perfil.
+                                val id = profile.id
+                                val ok = runCatching { Backgrounds.save(context, kind, id, bytes) }.getOrDefault(false)
+                                if (ok) scope.launch { setVersion(id, System.currentTimeMillis()) }
+                                ok
+                            },
+                            onRemove = {
+                                Backgrounds.delete(context, kind, profile.id)
+                                scope.launch { setVersion(profile.id, 0) }
+                                screen = Screen.APPEARANCE
+                            },
+                            onBack = { screen = Screen.APPEARANCE },
+                        )
+                    }
                 }
             }
 

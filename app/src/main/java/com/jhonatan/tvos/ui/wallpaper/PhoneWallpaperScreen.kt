@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jhonatan.tvos.R
+import com.jhonatan.tvos.data.PhotoKind
 import com.jhonatan.tvos.system.Qr
 import com.jhonatan.tvos.system.WallpaperServer
 import com.jhonatan.tvos.ui.components.TvButton
@@ -44,13 +45,14 @@ import kotlin.random.Random
 private enum class Status { WAITING, RECEIVED, NO_NETWORK }
 
 /**
- * Pantalla 8 del diseño: QR + dirección + código de 4 dígitos. El servidor solo vive mientras esta pantalla
+ * Pantalla 8 del diseño (fondo o foto de perfil): QR + dirección + código de 4 dígitos. El servidor solo vive mientras esta pantalla
  * está abierta. [onPhoto] guarda la foto (en segundo plano) y devuelve false si no es una imagen válida.
  */
 @Composable
 fun PhoneWallpaperScreen(
+    kind: PhotoKind,
     profileName: String,
-    hasBackground: Boolean,
+    hasPhoto: Boolean,
     onPhoto: (ByteArray) -> Boolean,
     onRemove: () -> Unit,
     onBack: () -> Unit,
@@ -60,9 +62,12 @@ fun PhoneWallpaperScreen(
     val code = remember { Random.nextInt(1000, 10000).toString() }
     var status by remember { mutableStateOf(Status.WAITING) }
     var url by remember { mutableStateOf<String?>(null) }
+    val isAvatar = kind == PhotoKind.AVATAR
+    val pageHeading = stringResource(if (isAvatar) R.string.av_page_heading else R.string.wp_page_heading)
+    val pageNote = stringResource(if (isAvatar) R.string.av_page_note else R.string.wp_page_note)
 
     DisposableEffect(Unit) {
-        val server = WallpaperServer(code) { bytes ->
+        val server = WallpaperServer(code, pageHeading, pageNote) { bytes ->
             onPhoto(bytes).also { ok -> if (ok) status = Status.RECEIVED }
         }
         server.start(scope)
@@ -96,8 +101,11 @@ fun PhoneWallpaperScreen(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            TvText(stringResource(R.string.wp_profile, profileName).uppercase(), 13.sp, weight = FontWeight.SemiBold, color = t.fgMuted)
-            TvText(stringResource(R.string.wp_title), 34.sp, weight = FontWeight.Bold, maxLines = 2)
+            TvText(
+                stringResource(if (isAvatar) R.string.av_profile else R.string.wp_profile, profileName).uppercase(),
+                13.sp, weight = FontWeight.SemiBold, color = t.fgMuted,
+            )
+            TvText(stringResource(if (isAvatar) R.string.av_title else R.string.wp_title), 34.sp, weight = FontWeight.Bold, maxLines = 2)
             Step(1, stringResource(R.string.wp_step_wifi))
             Step(2, stringResource(R.string.wp_step_scan))
             Step(3, stringResource(R.string.wp_step_send))
@@ -105,7 +113,7 @@ fun PhoneWallpaperScreen(
             TvText(stringResource(R.string.wp_code, code), 22.sp, weight = FontWeight.Bold)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 TvButton(stringResource(R.string.back), onClick = onBack, modifier = Modifier.focusRequester(backFocus))
-                if (hasBackground) TvButton(stringResource(R.string.wp_remove), onClick = onRemove)
+                if (hasPhoto) TvButton(stringResource(if (isAvatar) R.string.av_remove else R.string.wp_remove), onClick = onRemove)
             }
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {

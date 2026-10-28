@@ -96,3 +96,4 @@ Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQ
 | Dónde se ve | Inicio cuando la app enfocada no publica contenido, y detrás del cajón con velo |
 | QR | ZXing core 3.5.3 (solo generación) |
 | Carrusel | Sin recuadro azul al enfocarlo: indicadores + texto de ayuda |
+| Foto de perfil | Mismo flujo QR: "Foto de perfil desde el móvil", recorte cuadrado 320×320; sustituye a la inicial en todos los avatares (v0.4.1) |

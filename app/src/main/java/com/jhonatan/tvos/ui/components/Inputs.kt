@@ -30,6 +30,16 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import com.jhonatan.tvos.data.Backgrounds
+import com.jhonatan.tvos.data.Images
+import com.jhonatan.tvos.data.PhotoKind
 import com.jhonatan.tvos.data.Profile
 import com.jhonatan.tvos.ui.theme.LocalTv
 import com.jhonatan.tvos.ui.theme.ProfileColors
@@ -41,18 +51,28 @@ fun Profile.displayName(fallback: String) = name.ifBlank { fallback }
 /** Círculo con la inicial del perfil. */
 @Composable
 fun ProfileAvatar(profile: Profile, size: Dp, fallbackName: String, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val uri = Backgrounds.uri(context, PhotoKind.AVATAR, profile)
+    var photo by remember(uri) { mutableStateOf<ImageBitmap?>(null) }
+    LaunchedEffect(uri) { photo = uri?.let { Images.load(context, it, PhotoKind.AVATAR.width, PhotoKind.AVATAR.height) } }
     Box(
         modifier
             .size(size)
-            .background(ProfileColors.getOrElse(profile.color) { ProfileColors[0] }, CircleShape),
+            .clip(CircleShape)
+            .background(ProfileColors.getOrElse(profile.color) { ProfileColors[0] }),
         contentAlignment = Alignment.Center,
     ) {
-        TvText(
-            text = profile.displayName(fallbackName).take(1).uppercase(),
-            size = (size.value * 0.42f).sp,
-            weight = FontWeight.SemiBold,
-            color = Color.White,
-        )
+        val image = photo
+        if (image != null) {
+            Image(image, contentDescription = profile.displayName(fallbackName), contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+        } else {
+            TvText(
+                text = profile.displayName(fallbackName).take(1).uppercase(),
+                size = (size.value * 0.42f).sp,
+                weight = FontWeight.SemiBold,
+                color = Color.White,
+            )
+        }
     }
 }
 
