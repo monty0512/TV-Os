@@ -164,10 +164,14 @@ object SystemSettings {
     fun openWifi(context: Context) = open(context, Settings.ACTION_WIFI_SETTINGS)
 
     /**
-     * Ajustes de imagen: Android TV no tiene un atajo estándar y en el MiTV ACTION_DISPLAY_SETTINGS abre la Wi-Fi
-     * (verificado). Hasta conocer la pantalla de imagen de Xiaomi se abren los Ajustes generales.
+     * Ajustes de imagen: Android TV no tiene un atajo estándar (ACTION_DISPLAY_SETTINGS abre la Wi-Fi en el MiTV).
+     * Se usa la acción propia de Xiaomi (encontrada con dumpsys) y, si no existe, los Ajustes generales.
      */
-    fun openPicture(context: Context) = openSettings(context)
+    fun openPicture(context: Context) =
+        open(context, XIAOMI_PICTURE_SETTINGS) || openSettings(context)
+
+    /** Pantalla de imagen del MiTV (com.android.tv.settings/.partnercustomizer.picture.PictureActivity). */
+    private const val XIAOMI_PICTURE_SETTINGS = "com.mitv.settings.PICTURE_SETTINGS"
 
     fun openSettings(context: Context) = open(context, Settings.ACTION_SETTINGS)
 

@@ -73,3 +73,14 @@ Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQ
 | Apagar / temporizador | Servicio de accesibilidad (`GLOBAL_ACTION_LOCK_SCREEN`), activado por `install`. El firmware de Xiaomi descarta el administrador de dispositivo (verificado) |
 | Entradas HDMI | `TvInputManager` + Live TV del fabricante. Por verificar en el MiTV |
 | Primera apertura lenta tras encender | Carga de arranque del sistema (verificado en logcat), no TV-Os. Fase 4: bloquear arranque automático de apps (AnyDesk, Twitch, Amazon…) |
+
+## Fase 3A (v0.3.0)
+| Tema | Decisión |
+|---|---|
+| Saludo | "Buenos días / Buenas tardes / Buenas noches, [perfil]" en el Top Shelf (5–11 h, 12–18 h, resto) |
+| Bienvenida | Al elegir perfil o terminar la bienvenida: avatar + "¡Hola, [perfil]!" durante 1,8 s |
+| Top Shelf con contenido | Canales de vista previa (TvProvider, `READ_TV_LISTINGS` por `pm grant`); rota cada 7 s; sin contenido → color + nombre |
+| Continuar viendo | Fila bajo las favoritas: Watch Next de las apps; si no hay, últimas apps abiertas desde TV-Os |
+| Clima | ipapi.co (respaldo ipwho.is) + Open-Meteo, sin clave; cada 30 min con TV-Os en pantalla |
+| Imagen | Acción `com.mitv.settings.PICTURE_SETTINGS` (encontrada con dumpsys) |
+| Fase 3B | Fondo del perfil desde el móvil (QR + servidor local) |

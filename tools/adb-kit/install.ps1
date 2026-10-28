@@ -24,6 +24,7 @@ Write-Host ("     (APK compilado el " + (Get-Item $Apk).LastWriteTime.ToString("
 Write-Host ("  2. Poner TV-Os como Inicio (antes: " + (Get-CurrentHome) + ")")
 Write-Host "  3. Mantener MiLauncher instalado como respaldo"
 Write-Host "  4. Activar el servicio de accesibilidad de TV-Os (apagar pantalla; mantener ≡ o SET abre el Centro de control)"
+Write-Host "  5. Permitir leer el contenido que publican las apps (Top Shelf y Continuar viendo)"
 $ok = Read-Host "¿Continuar? (s/N)"
 if ($ok -notmatch "^(s|si|sí)$") { Write-Host "Cancelado. No se cambió nada."; exit 0 }
 
@@ -53,6 +54,13 @@ if (((Sh "dumpsys accessibility") -join "`n") -match "TvOsAccessibilityService")
     Write-Host "OK: accesibilidad activada"
 } else {
     Write-Host "AVISO: el sistema no cargó el servicio de accesibilidad."
+}
+Write-Host "Permitiendo leer el contenido de las apps…"
+Sh "pm grant $script:TvosPkg android.permission.READ_TV_LISTINGS" | Out-Null
+if (((Sh "dumpsys package $script:TvosPkg") -join "`n") -match "READ_TV_LISTINGS: granted=true") {
+    Write-Host "OK: permiso de contenido concedido"
+} else {
+    Write-Host "AVISO: no se pudo conceder READ_TV_LISTINGS; el Top Shelf mostrará solo colores"
 }
 Sh "input keyevent KEYCODE_HOME" | Out-Null
 Write-Host ""

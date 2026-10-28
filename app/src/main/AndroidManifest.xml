@@ -7,6 +7,10 @@
     <!-- Centro de control: "Liberar memoria" y estado de la red. -->
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Clima por IP e imágenes del Top Shelf. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Top Shelf y "Continuar viendo": lo concede el script de instalación (pm grant). -->
+    <uses-permission android:name="android.permission.READ_TV_LISTINGS" />
 
     <!-- Visibilidad de paquetes (Android 11+); en Android 10 no tiene efecto. -->
     <queries>

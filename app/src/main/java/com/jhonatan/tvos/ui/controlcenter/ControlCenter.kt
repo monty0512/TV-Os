@@ -39,6 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jhonatan.tvos.R
 import com.jhonatan.tvos.data.Profile
+import com.jhonatan.tvos.data.WeatherNow
+import com.jhonatan.tvos.ui.components.weatherText
 import com.jhonatan.tvos.system.Inputs
 import com.jhonatan.tvos.system.Memory
 import com.jhonatan.tvos.system.Network
@@ -66,6 +68,7 @@ import java.util.Date
 @Composable
 fun ControlCenter(
     profile: Profile?,
+    weather: WeatherNow?,
     onSwitchProfile: () -> Unit,
     onClose: () -> Unit,
 ) {
@@ -110,6 +113,7 @@ fun ControlCenter(
                 Box(Modifier.weight(1f))
                 TvText(DateFormat.getDateInstance(DateFormat.MEDIUM).format(now), 13.sp, color = t.fgMuted)
             }
+            if (weather != null) TvText(weatherText(weather), 14.sp, color = t.fgMuted)
 
             // Perfil
             Row(

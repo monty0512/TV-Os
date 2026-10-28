@@ -29,6 +29,14 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.jhonatan.tvos.data.AppRepository
+import com.jhonatan.tvos.data.ContinueItem
+import com.jhonatan.tvos.data.Images
+import com.jhonatan.tvos.data.Profile
+import com.jhonatan.tvos.data.RecentApps
+import com.jhonatan.tvos.data.ShelfItem
+import com.jhonatan.tvos.data.TvContentRepository
+import com.jhonatan.tvos.data.Weather
+import com.jhonatan.tvos.data.WeatherNow
 import com.jhonatan.tvos.data.ProfileStore
 import com.jhonatan.tvos.data.ProfilesState
 import com.jhonatan.tvos.data.TvApp
@@ -62,6 +70,7 @@ fun TvOsRoot(
     val context = LocalContext.current
     val store = remember { ProfileStore(context.applicationContext) }
     val repo = remember { AppRepository(context.applicationContext) }
+    val content = remember { TvContentRepository(context.applicationContext) }
     val reduced = remember { Perf.reducedEffects(context) }
     val scope = rememberCoroutineScope()
 
@@ -74,6 +83,11 @@ fun TvOsRoot(
     var editReturn by rememberSaveable { mutableStateOf(Screen.HOME) }
     var editInitial by rememberSaveable { mutableStateOf<String?>(null) }
     var hour by remember { mutableIntStateOf(Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) }
+    var shelfContent by remember { mutableStateOf<Map<String, List<ShelfItem>>>(emptyMap()) }
+    var watchNext by remember { mutableStateOf<List<ShelfItem>>(emptyList()) }
+    var recentApps by remember { mutableStateOf(RecentApps.get(context)) }
+    var weather by remember { mutableStateOf<WeatherNow?>(null) }
+    var welcome by remember { mutableStateOf<Profile?>(null) }
     val latestState by rememberUpdatedState(stateOrNull)
 
     // Recarga la lista cuando se instala, actualiza o desinstala una app.
@@ -119,7 +133,21 @@ fun TvOsRoot(
     // segundo plano (no en cada cambio de app: recargarlos al volver retrasaba abrir la siguiente).
     // Se recargan al volver al Inicio; mientras tanto se ve el color de cada app.
     LaunchedEffect(trimEvents) {
+        if (trimEvents > 0) Images.clear()
         if (trimEvents > 0 && reduced && !isForeground) allApps = allApps.withoutBanners()
+    }
+    // Contenido de las apps (Top Shelf y "Continuar viendo"): se relee cada vez que se vuelve al Inicio.
+    LaunchedEffect(foreground, reloadKey) {
+        if (!foreground) return@LaunchedEffect
+        shelfContent = content.previewByPackage()
+        watchNext = content.watchNext()
+    }
+    // Clima: cada 30 minutos mientras TV-Os está en pantalla.
+    LaunchedEffect(foreground) {
+        while (foreground) {
+            Weather.fetch(context)?.let { weather = it }
+            delay(30 * 60_000L)
+        }
     }
     LaunchedEffect(foreground) {
         if (foreground && allApps.any { it.banner == null }) reloadKey++
@@ -167,6 +195,12 @@ fun TvOsRoot(
             .sortedBy { orderIndex[it.packageName] ?: Int.MAX_VALUE } // estable: el resto queda alfabético
     }
     val hiddenApps = remember(allApps, settings.hidden) { allApps.filter { it.packageName in settings.hidden } }
+    // "Continuar viendo": lo que publican las apps visibles; si no hay nada, las últimas apps abiertas.
+    val continueItems = remember(watchNext, recentApps, visible) {
+        val visiblePkgs = visible.associateBy { it.packageName }
+        val programs = watchNext.filter { it.packageName in visiblePkgs }.map { ContinueItem.Program(it) }
+        programs.ifEmpty { recentApps.mapNotNull { visiblePkgs[it] }.map { ContinueItem.RecentApp(it) } }
+    }
 
     fun update(transform: (UserSettings) -> UserSettings) {
         scope.launch { store.updateActive(transform) }
@@ -210,6 +244,7 @@ fun TvOsRoot(
                         scope.launch {
                             store.updateAll { s -> s.copy(order = favorites + (s.order - favorites.toSet()), theme = theme, density = density) }
                             store.completeOnboarding()
+                            welcome = state.active
                             screen = Screen.HOME
                         }
                     },
@@ -219,6 +254,7 @@ fun TvOsRoot(
                     state = state,
                     onPick = { id ->
                         scope.launch { store.setActive(id) }
+                        welcome = state.profiles.firstOrNull { it.id == id }
                         screen = Screen.HOME
                     },
                     onAdd = { name, color -> scope.launch { store.addProfile(name, color) } },
@@ -230,9 +266,22 @@ fun TvOsRoot(
                     density = settings.density,
                     loading = loading,
                     homeEvents = homeEvents,
+                    profileName = state.active?.name.orEmpty(),
+                    weather = weather,
+                    shelfContent = shelfContent,
+                    continueItems = continueItems,
                     onLaunch = { app ->
                         Log.i(LOG_TAG, "launch ${app.packageName}")
+                        RecentApps.record(context, app.packageName)
+                        recentApps = RecentApps.get(context)
                         repo.launchIntent(app.packageName)?.let { runCatching { context.startActivity(it) } }
+                    },
+                    onOpenProgram = { item ->
+                        Log.i(LOG_TAG, "open program ${item.packageName} '${item.title}'")
+                        RecentApps.record(context, item.packageName)
+                        recentApps = RecentApps.get(context)
+                        val intent = TvContentRepository.openIntent(item) ?: repo.launchIntent(item.packageName)
+                        intent?.let { runCatching { context.startActivity(it) } }
                     },
                     onEdit = { app ->
                         editInitial = app.packageName
@@ -280,6 +329,7 @@ fun TvOsRoot(
             if (controlCenterOpen) {
                 ControlCenter(
                     profile = state.active,
+                    weather = weather,
                     onSwitchProfile = {
                         controlCenterOpen = false
                         screen = Screen.PROFILES
@@ -287,6 +337,8 @@ fun TvOsRoot(
                     onClose = { controlCenterOpen = false },
                 )
             }
+
+            WelcomeOverlay(welcome, onDone = { welcome = null })
         }
     }
 }

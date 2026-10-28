@@ -80,4 +80,19 @@
     <string name="cc_free_of">%1$d of %2$d MB free</string>
     <string name="cc_free_of_freed">%1$d of %2$d MB free · +%3$d MB</string>
     <string name="cc_settings">TV settings</string>
+    <string name="greeting_morning">Good morning, %1$s</string>
+    <string name="greeting_afternoon">Good afternoon, %1$s</string>
+    <string name="greeting_night">Good evening, %1$s</string>
+    <string name="greeting_morning_alone">Good morning</string>
+    <string name="greeting_afternoon_alone">Good afternoon</string>
+    <string name="greeting_night_alone">Good evening</string>
+    <string name="welcome_title">Hi, %1$s!</string>
+    <string name="continue_watching">Continue watching</string>
+    <string name="recent_app">%1$s · opened recently</string>
+    <string name="wx_clear">Clear</string>
+    <string name="wx_cloudy">Cloudy</string>
+    <string name="wx_fog">Fog</string>
+    <string name="wx_rain">Rain</string>
+    <string name="wx_snow">Snow</string>
+    <string name="wx_storm">Storm</string>
 </resources>

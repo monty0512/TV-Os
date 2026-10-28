@@ -1,6 +1,19 @@
 package com.jhonatan.tvos.ui.home
 
 import android.text.format.DateFormat
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import com.jhonatan.tvos.data.ContinueItem
+import com.jhonatan.tvos.data.Images
+import com.jhonatan.tvos.data.ShelfItem
+import com.jhonatan.tvos.data.WeatherNow
+import com.jhonatan.tvos.ui.components.greeting
+import com.jhonatan.tvos.ui.components.weatherText
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -62,6 +75,12 @@ import java.util.Date
 val SidePadding = 48.dp
 private val ShelfHeight = 250.dp
 private val DrawerHeaderHeight = 52.dp
+private const val SHELF_ROTATE_MS = 7_000L
+// Tamaño de decodificación (px) de la imagen del Top Shelf y de las tarjetas: suficiente a 1080p con poca RAM.
+private const val HERO_W = 960
+private const val HERO_H = 540
+private const val CARD_W = 480
+private const val CARD_H = 270
 
 data class TileSize(val columns: Int, val width: Dp, val height: Dp, val gap: Dp)
 
@@ -78,8 +97,8 @@ fun tileSize(density: Density, screenWidth: Dp): TileSize {
 
 /**
  * Inicio al estilo Apple TV (pantallas 9 y 10 del diseño):
- * Top Shelf + primera fila de favoritas; al bajar, el Top Shelf se recoge y la cuadrícula
- * con todas las apps ocupa la pantalla.
+ * Top Shelf + primera fila de favoritas + "Continuar viendo"; al bajar, el Top Shelf se recoge y la
+ * cuadrícula con todas las apps ocupa la pantalla.
  */
 @Composable
 fun HomeScreen(
@@ -87,7 +106,12 @@ fun HomeScreen(
     density: Density,
     loading: Boolean,
     homeEvents: Int,
+    profileName: String,
+    weather: WeatherNow?,
+    shelfContent: Map<String, List<ShelfItem>>,
+    continueItems: List<ContinueItem>,
     onLaunch: (TvApp) -> Unit,
+    onOpenProgram: (ShelfItem) -> Unit,
     onEdit: (TvApp) -> Unit,
     onPersonalize: () -> Unit,
     onOpenControlCenter: () -> Unit,
@@ -96,11 +120,24 @@ fun HomeScreen(
     val reduced = LocalReducedEffects.current
     val size = tileSize(density, LocalConfiguration.current.screenWidthDp.dp)
     var focusedIdx by remember { mutableIntStateOf(0) }
+    var focusedContinue by remember { mutableStateOf<ContinueItem?>(null) }
     val focusedApp = apps.getOrNull(focusedIdx)
-    // Fuera de la primera fila = cajón desplegado.
-    val inDrawer = focusedIdx >= size.columns
+    // Fuera de la primera fila y de "Continuar viendo" = cajón desplegado.
+    val inDrawer = focusedContinue == null && focusedIdx >= size.columns
 
-    val shelfTarget = focusedApp?.let { if (t.isDark) darken(it.color, 0.6f) else lighten(it.color, 0.7f) } ?: t.tile
+    // Qué muestra el Top Shelf: el programa enfocado en "Continuar viendo" o lo que publica la app enfocada.
+    val shelfItems: List<ShelfItem> = when (val c = focusedContinue) {
+        is ContinueItem.Program -> listOf(c.item)
+        is ContinueItem.RecentApp -> shelfContent[c.app.packageName].orEmpty()
+        null -> focusedApp?.let { shelfContent[it.packageName] }.orEmpty()
+    }
+    val shelfLabel = when (val c = focusedContinue) {
+        is ContinueItem.RecentApp -> c.app.label
+        is ContinueItem.Program -> apps.firstOrNull { it.packageName == c.item.packageName }?.label ?: ""
+        null -> focusedApp?.label
+    }
+    val colorSource = (focusedContinue as? ContinueItem.RecentApp)?.app ?: focusedApp
+    val shelfTarget = colorSource?.let { if (t.isDark) darken(it.color, 0.6f) else lighten(it.color, 0.7f) } ?: t.tile
     val shelfColor by animateColorAsState(shelfTarget, tween(if (reduced) 0 else 300), label = "shelf")
     val headerHeight by animateDpAsState(
         targetValue = if (inDrawer) DrawerHeaderHeight else ShelfHeight,
@@ -114,23 +151,26 @@ fun HomeScreen(
     LaunchedEffect(homeEvents, apps.isNotEmpty()) {
         if (apps.isEmpty()) return@LaunchedEffect
         focusedIdx = 0
+        focusedContinue = null
         gridState.scrollToItem(0)
         withFrameNanos { }
         runCatching { firstFocus.requestFocus() }
     }
+
+    val favorites = apps.take(size.columns)
+    val rest = apps.drop(size.columns)
 
     Column(Modifier.fillMaxSize().background(t.bg)) {
         Box(
             Modifier
                 .fillMaxWidth()
                 .height(headerHeight)
-                .background(if (inDrawer) drawerHeaderColor(t.isDark) else shelfColor)
-                .padding(horizontal = SidePadding),
+                .background(if (inDrawer) drawerHeaderColor(t.isDark) else shelfColor),
         ) {
             if (inDrawer) {
                 DrawerHeader(focusedApp?.label ?: stringResource(R.string.personalize), onOpenControlCenter)
             } else {
-                TopShelf(focusedApp, onOpenControlCenter)
+                TopShelf(shelfLabel, shelfItems, profileName, weather, onOpenControlCenter)
             }
         }
 
@@ -142,19 +182,53 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.spacedBy(size.gap),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            itemsIndexed(apps, key = { _, app -> app.packageName }) { i, app ->
+            itemsIndexed(favorites, key = { _, app -> app.packageName }) { i, app ->
                 AppTile(
                     app = app,
                     width = size.width,
                     height = size.height,
                     onClick = { onLaunch(app) },
                     onLongClick = { onEdit(app) },
-                    onFocused = { focusedIdx = i },
+                    onFocused = {
+                        focusedIdx = i
+                        focusedContinue = null
+                    },
                     modifier = if (i == 0) Modifier.focusRequester(firstFocus) else Modifier,
                 )
             }
+            if (continueItems.isNotEmpty()) {
+                item(key = "continue", span = { GridItemSpan(maxLineSpan) }) {
+                    ContinueRow(
+                        items = continueItems,
+                        cardWidth = size.width * 2 + size.gap,
+                        onFocused = { focusedContinue = it },
+                        onOpen = { c ->
+                            when (c) {
+                                is ContinueItem.Program -> onOpenProgram(c.item)
+                                is ContinueItem.RecentApp -> onLaunch(c.app)
+                            }
+                        },
+                    )
+                }
+            }
+            itemsIndexed(rest, key = { _, app -> app.packageName }) { i, app ->
+                AppTile(
+                    app = app,
+                    width = size.width,
+                    height = size.height,
+                    onClick = { onLaunch(app) },
+                    onLongClick = { onEdit(app) },
+                    onFocused = {
+                        focusedIdx = size.columns + i
+                        focusedContinue = null
+                    },
+                )
+            }
             item(key = "personalize") {
-                PersonalizeTile(size, onClick = onPersonalize, onFocused = { focusedIdx = apps.size })
+                PersonalizeTile(size, onClick = onPersonalize, onFocused = {
+                    focusedIdx = apps.size
+                    focusedContinue = null
+                })
             }
         }
         if (loading && apps.isEmpty()) {
@@ -165,43 +239,168 @@ fun HomeScreen(
 
 private fun drawerHeaderColor(dark: Boolean) = if (dark) Color(0xFF141416) else Color(0xFFE5E5EA)
 
+/**
+ * Top Shelf: si la app publica contenido, se muestra a pantalla de cabecera y rota cada pocos segundos;
+ * si no, el color de la app y su nombre grande.
+ */
 @Composable
-private fun TopShelf(focusedApp: TvApp?, onOpenControlCenter: () -> Unit) {
+private fun TopShelf(
+    appLabel: String?,
+    items: List<ShelfItem>,
+    profileName: String,
+    weather: WeatherNow?,
+    onOpenControlCenter: () -> Unit,
+) {
     val t = LocalTv.current
-    Box(Modifier.fillMaxSize().padding(vertical = 24.dp)) {
-        TvText(
-            text = stringResource(R.string.app_name).uppercase(),
-            size = 12.sp,
-            weight = FontWeight.SemiBold,
-            color = t.fgMuted,
-            modifier = Modifier.align(Alignment.TopStart),
-        )
-        Row(
-            Modifier.align(Alignment.TopEnd),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            ControlCenterButton(onOpenControlCenter)
-            Clock()
+    val context = LocalContext.current
+    var index by remember(items) { mutableIntStateOf(0) }
+    LaunchedEffect(items) {
+        while (items.size > 1) {
+            delay(SHELF_ROTATE_MS)
+            index = (index + 1) % items.size
         }
-        Column(Modifier.align(Alignment.BottomStart)) {
-            TvText(stringResource(R.string.shelf_no_channel), 13.sp, color = t.fgMuted)
-            Spacer(Modifier.height(4.dp))
+    }
+    val item = items.getOrNull(index)
+    var hero by remember { mutableStateOf<ImageBitmap?>(null) }
+    LaunchedEffect(item?.imageUri) {
+        hero = item?.imageUri?.let { Images.load(context, it, HERO_W, HERO_H) }
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        val image = hero
+        if (item != null && image != null) {
+            Image(image, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            // Velo para que el texto se lea sobre cualquier imagen.
+            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.45f)))
+        }
+        val onImage = item != null && image != null
+        val fg = if (onImage) Color.White else t.fg
+        val muted = if (onImage) Color(0xFFE5E5EA) else t.fgMuted
+
+        Box(Modifier.fillMaxSize().padding(horizontal = SidePadding, vertical = 22.dp)) {
             TvText(
-                text = focusedApp?.label ?: stringResource(R.string.loading_apps),
-                size = 48.sp,
-                weight = FontWeight.Bold,
+                text = greeting(profileName),
+                size = 18.sp,
+                weight = FontWeight.SemiBold,
+                color = fg,
+                modifier = Modifier.align(Alignment.TopStart),
             )
-            Spacer(Modifier.height(4.dp))
-            TvText(stringResource(R.string.shelf_hint), 13.sp, color = t.fgMuted)
+            Row(
+                Modifier.align(Alignment.TopEnd),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (weather != null) TvText(weatherText(weather), 15.sp, color = muted)
+                ControlCenterButton(onOpenControlCenter)
+                Clock(color = fg)
+            }
+            Column(Modifier.align(Alignment.BottomStart)) {
+                if (item != null) {
+                    TvText(appLabel?.uppercase() ?: "", 12.sp, weight = FontWeight.SemiBold, color = muted)
+                    Spacer(Modifier.height(4.dp))
+                    TvText(item.title, 40.sp, weight = FontWeight.Bold, color = fg)
+                    item.subtitle?.let {
+                        Spacer(Modifier.height(4.dp))
+                        TvText(it, 15.sp, color = muted, maxLines = 2, modifier = Modifier.fillMaxWidth(0.6f))
+                    }
+                } else {
+                    TvText(stringResource(R.string.shelf_no_channel), 13.sp, color = muted)
+                    Spacer(Modifier.height(4.dp))
+                    TvText(appLabel ?: stringResource(R.string.loading_apps), 48.sp, weight = FontWeight.Bold, color = fg)
+                    Spacer(Modifier.height(4.dp))
+                    TvText(stringResource(R.string.shelf_hint), 13.sp, color = muted)
+                }
+            }
         }
+    }
+}
+
+/** Fila "Continuar viendo": programas publicados por las apps o, si no hay, las últimas apps abiertas. */
+@Composable
+private fun ContinueRow(
+    items: List<ContinueItem>,
+    cardWidth: Dp,
+    onFocused: (ContinueItem) -> Unit,
+    onOpen: (ContinueItem) -> Unit,
+) {
+    val t = LocalTv.current
+    Column(Modifier.padding(top = 6.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        TvText(stringResource(R.string.continue_watching), 16.sp, weight = FontWeight.SemiBold)
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(18.dp),
+            contentPadding = PaddingValues(vertical = 8.dp),
+        ) {
+            items(items, key = { it.key }) { c ->
+                ContinueCard(c, cardWidth, onFocused = { onFocused(c) }, onClick = { onOpen(c) })
+            }
+        }
+        Spacer(Modifier.height(2.dp).fillMaxWidth().background(t.tile))
+    }
+}
+
+@Composable
+private fun ContinueCard(item: ContinueItem, width: Dp, onFocused: () -> Unit, onClick: () -> Unit) {
+    val t = LocalTv.current
+    val context = LocalContext.current
+    var focused by remember { mutableStateOf(false) }
+    val cardShape = RoundedCornerShape(12.dp)
+    val height = width * 9 / 16
+    var image by remember { mutableStateOf<ImageBitmap?>(null) }
+    val uri = (item as? ContinueItem.Program)?.item?.imageUri
+    LaunchedEffect(uri) { image = uri?.let { Images.load(context, it, CARD_W, CARD_H) } }
+
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Box(
+            Modifier
+                .size(width, height)
+                .graphicsLayer {
+                    val s = if (focused) 1.06f else 1f
+                    scaleX = s
+                    scaleY = s
+                    shape = cardShape
+                    clip = true
+                }
+                .background(t.tile)
+                .then(if (focused) Modifier.border(t.borderWidth, t.focusBorder, cardShape) else Modifier)
+                .remoteClickable(onClick = onClick, onFocus = {
+                    focused = it
+                    if (it) onFocused()
+                }),
+        ) {
+            val banner = (item as? ContinueItem.RecentApp)?.app?.banner
+            when {
+                image != null -> Image(image!!, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                banner != null -> Image(banner, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            }
+            val progress = (item as? ContinueItem.Program)?.item?.progress
+            if (progress != null) {
+                Box(
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .fillMaxWidth()
+                        .height(4.dp)
+                        .background(Color.Black.copy(alpha = 0.5f)),
+                ) {
+                    Box(Modifier.fillMaxWidth(progress).height(4.dp).background(t.accent))
+                }
+            }
+        }
+        TvText(
+            text = when (item) {
+                is ContinueItem.Program -> item.item.title
+                is ContinueItem.RecentApp -> stringResource(R.string.recent_app, item.app.label)
+            },
+            size = 13.sp,
+            color = if (focused) t.fg else t.fgMuted,
+            modifier = Modifier.width(width),
+        )
     }
 }
 
 @Composable
 private fun DrawerHeader(focusedLabel: String, onOpenControlCenter: () -> Unit) {
     val t = LocalTv.current
-    Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxSize().padding(horizontal = SidePadding), verticalAlignment = Alignment.CenterVertically) {
         TvText(stringResource(R.string.all_apps), 12.sp, weight = FontWeight.SemiBold, color = t.fgMuted)
         Spacer(Modifier.size(14.dp))
         TvText(focusedLabel, 18.sp, weight = FontWeight.Bold, modifier = Modifier.weight(1f))
@@ -266,7 +465,7 @@ private fun ControlCenterButton(onClick: () -> Unit) {
 }
 
 @Composable
-private fun Clock(modifier: Modifier = Modifier) {
+private fun Clock(modifier: Modifier = Modifier, color: Color = LocalTv.current.fg) {
     val context = LocalContext.current
     val format = remember { DateFormat.getTimeFormat(context) }
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -276,5 +475,5 @@ private fun Clock(modifier: Modifier = Modifier) {
             delay(60_000 - now % 60_000)
         }
     }
-    TvText(format.format(Date(now)), 22.sp, modifier = modifier, weight = FontWeight.Medium)
+    TvText(format.format(Date(now)), 22.sp, modifier = modifier, weight = FontWeight.Medium, color = color)
 }
