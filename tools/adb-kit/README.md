@@ -1,6 +1,6 @@
 # Kit ADB de TV-Os
 
-Scripts para preparar la TV desde un PC. **Fase 0: solo diagnóstico (no modifica nada).**
+Scripts para preparar la TV desde un PC.
 
 ## Requisitos
 1. [Android Platform Tools](https://developer.android.com/tools/releases/platform-tools) (`adb`) en el PATH.
@@ -34,3 +34,37 @@ El informe se guarda en `reports/diagnostico-<fecha>.txt` (excluido de git porqu
 | Permiso `READ_TV_LISTINGS` | Viabilidad del Top Shelf y "Continuar viendo" |
 | Salvapantallas y animaciones | Valores actuales antes de optimizar |
 | Paquetes del fabricante | Base para la lista de limpieza equilibrada (Fase 4) |
+
+## Instalar TV-Os (Fase 1)
+Compila primero el APK (ver el README principal). Luego, desde esta carpeta:
+
+```powershell
+# Windows
+powershell -ExecutionPolicy Bypass -File .\install.ps1 192.168.1.50
+```
+```bash
+# Linux / macOS
+./install.sh 192.168.1.50
+```
+El script muestra lo que va a hacer y pide confirmación. Instala el APK, pone TV-Os como Inicio y **deja MiLauncher instalado** como respaldo.
+
+Volver a MiLauncher en cualquier momento:
+```powershell
+powershell -ExecutionPolicy Bypass -File .\restore-home.ps1 192.168.1.50
+```
+
+## Medir la memoria (solo lectura)
+```powershell
+powershell -ExecutionPolicy Bypass -File .\memory.ps1 192.168.1.50
+```
+Objetivo de la Fase 1: **menos de 60 MB PSS** en el Inicio. Si se supera, se migra la interfaz a Views.
+
+## Archivos
+| Archivo | Uso |
+|---|---|
+| `diagnose.*` | Diagnóstico de solo lectura |
+| `install.*` | Instala TV-Os y lo pone como Inicio |
+| `restore-home.*` | Vuelve a MiLauncher como Inicio |
+| `memory.*` | Mide la memoria de TV-Os |
+| `common.*` | Funciones compartidas |
+| `debloat-list.txt` | Lista de limpieza (se aplica en la Fase 4) |

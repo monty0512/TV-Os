@@ -57,8 +57,8 @@ Diseño de muestra aprobado (8 pantallas): https://claude.ai/artifact/CbV4gxiAQK
 - Desde el 31/03/2025 Google Fotos no permite leer la biblioteca a apps de terceros; por eso el salvapantallas usa Backdrop.
 
 ## Fases
-0. Diagnóstico de solo lectura ← **actual**
-1. Inicio, ordenar/ocultar apps, apariencia
+0. Diagnóstico de solo lectura ✅
+1. Inicio, ordenar/ocultar apps, apariencia ← **actual**
 2. Perfiles, bienvenida, Centro de control
 3. Top Shelf + Continuar viendo, fondo desde el móvil, clima
 4. Kit ADB de limpieza completa con opción de deshacer

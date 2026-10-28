@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">TV-Os</string>
+    <string name="shelf_no_channel">No preview channel yet</string>
+    <string name="shelf_hint">OK to open · Hold OK to reorder</string>
+    <string name="loading_apps">Loading apps…</string>
+    <string name="personalize">Personalize</string>
+    <string name="edit_title">Edit home row</string>
+    <string name="edit_hint">Select an app with OK, move it with left/right and press OK again to drop it. Back saves.</string>
+    <string name="edit_moving">Moving: %1$s</string>
+    <string name="edit_selected">Selected: %1$s</string>
+    <string name="hide">Hide</string>
+    <string name="done">Done</string>
+    <string name="hidden_title">Hidden apps · press to show again</string>
+    <string name="none_hidden">No hidden apps</string>
+    <string name="appearance">Appearance</string>
+    <string name="theme">Theme</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_auto">Automatic</string>
+    <string name="accent">Accent color</string>
+    <string name="accent_blue">Blue</string>
+    <string name="accent_orange">Orange</string>
+    <string name="accent_green">Green</string>
+    <string name="accent_purple">Purple</string>
+    <string name="size">Icon size</string>
+    <string name="size_large">Large (5 per row)</string>
+    <string name="size_compact">Compact (7 per row)</string>
+    <string name="large_text">Large text</string>
+    <string name="high_contrast">High contrast</string>
+    <string name="toggle_value">%1$s: %2$s</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="reorder_apps">Reorder and hide apps</string>
+    <string name="back">Back</string>
+    <string name="perf_reduced">Performance: adaptive · reduced effects (low-memory device)</string>
+    <string name="perf_full">Performance: adaptive · full effects</string>
+</resources>
