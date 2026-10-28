@@ -83,6 +83,16 @@ Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQ
 | Contenido por app | Carrusel a pantalla completa con la fila de favoritas encima (abajo): Watch Next de la app enfocada + sus recomendaciones; ▲ entra, ◀ ▶ navega, OK abre |
 | Clima | ipapi.co (respaldo ipwho.is) + Open-Meteo, sin clave; cada 30 min con TV-Os en pantalla |
 | Imagen | Acción `com.mitv.settings.PICTURE_SETTINGS` (encontrada con dumpsys) |
-| Fase 3B | Fondo del perfil desde el móvil (QR + servidor local) |
+| Fase 3B | Fondo del perfil desde el móvil (QR + servidor local) ✅ v0.4.0 |
 | Internet tras añadir el permiso | `EPERM` hasta reiniciar la TV: el permiso se añadió en una actualización (verificado) |
 | YouTube | No publica canales ni Watch Next para launchers de terceros en el MiTV (verificado): muestra color y nombre |
+
+## Fase 3B (v0.4.0)
+| Tema | Decisión |
+|---|---|
+| Envío | Personalizar › Apariencia › "Fondo desde el móvil": QR + dirección + código de 4 dígitos |
+| Servidor | HTTP propio en el puerto 8080 (o 8081/8082/8090), solo mientras la pantalla está abierta; exige el código; máx. 15 MB |
+| Foto | Rotación EXIF corregida, recorte centrado 16:9, 1280×720 JPG por perfil en el almacenamiento interno |
+| Dónde se ve | Inicio cuando la app enfocada no publica contenido, y detrás del cajón con velo |
+| QR | ZXing core 3.5.3 (solo generación) |
+| Carrusel | Sin recuadro azul al enfocarlo: indicadores + texto de ayuda |

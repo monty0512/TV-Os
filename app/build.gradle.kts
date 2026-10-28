@@ -12,8 +12,8 @@ android {
         applicationId = "com.jhonatan.tvos"
         minSdk = 29 // Android 10: MiTV-MOOQ0
         targetSdk = 34
-        versionCode = 11
-        versionName = "0.3.5"
+        versionCode = 12
+        versionName = "0.4.0"
         resourceConfigurations += listOf("es", "en")
     }
 
@@ -47,4 +47,6 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.9.2")
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+    // Solo para dibujar el código QR del fondo desde el móvil.
+    implementation("com.google.zxing:core:3.5.3")
 }

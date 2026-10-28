@@ -108,6 +108,8 @@ fun HomeScreen(
     homeEvents: Int,
     profileName: String,
     weather: WeatherNow?,
+    /** Fondo del perfil enviado desde el móvil (null = color de la app). */
+    profileBackground: ImageBitmap?,
     /** Contenido de cada app ("Continuar viendo" primero, luego sus recomendaciones). */
     appContent: Map<String, List<ShelfItem>>,
     onLaunch: (TvApp) -> Unit,
@@ -153,12 +155,18 @@ fun HomeScreen(
     val rest = apps.drop(size.columns)
 
     Box(Modifier.fillMaxSize().background(t.bg)) {
+        // En el cajón, el fondo del perfil queda detrás de las apps con un velo fuerte.
+        if (inDrawer && profileBackground != null) {
+            Image(profileBackground, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            Box(Modifier.fillMaxSize().background(t.bg.copy(alpha = 0.82f)))
+        }
         // Capa de fondo: carrusel a pantalla completa (imagen o color de la app) detrás de la fila de favoritas.
         if (!inDrawer) {
             TopShelf(
                 appLabel = shelfLabel,
                 items = shelfItems,
                 background = shelfColor,
+                profileBackground = profileBackground,
                 bottomInset = favoritesArea,
                 profileName = profileName,
                 weather = weather,
@@ -184,7 +192,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .then(if (inDrawer) Modifier.background(t.bg) else Modifier),
+                    .then(if (inDrawer && profileBackground == null) Modifier.background(t.bg) else Modifier),
                 contentPadding = PaddingValues(start = SidePadding, end = SidePadding, top = 18.dp, bottom = 48.dp),
                 horizontalArrangement = Arrangement.spacedBy(size.gap),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -233,6 +241,7 @@ private fun TopShelf(
     appLabel: String?,
     items: List<ShelfItem>,
     background: Color,
+    profileBackground: ImageBitmap?,
     /** Alto reservado abajo para la fila de favoritas (el texto del carrusel queda encima). */
     bottomInset: Dp,
     profileName: String,
@@ -258,8 +267,9 @@ private fun TopShelf(
     }
 
     Box(Modifier.fillMaxSize().background(background)) {
-        val image = hero
-        if (item != null && image != null) {
+        // Imagen del contenido de la app; si no hay, el fondo del perfil; si tampoco, el color de la app.
+        val image = (if (item != null) hero else null) ?: profileBackground
+        if (image != null) {
             Image(image, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
             // Velo para que el texto se lea sobre cualquier imagen, más oscuro detrás de la fila de favoritas.
             Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.35f)))
@@ -271,7 +281,7 @@ private fun TopShelf(
                     .background(Color.Black.copy(alpha = 0.35f)),
             )
         }
-        val onImage = item != null && image != null
+        val onImage = image != null
         val fg = if (onImage) Color.White else t.fg
         val muted = if (onImage) Color(0xFFE5E5EA) else t.fgMuted
 
@@ -293,12 +303,10 @@ private fun TopShelf(
                 Clock(color = fg)
             }
             if (item != null) {
-                val shape = RoundedCornerShape(14.dp)
                 Column(
                     Modifier
                         .align(Alignment.BottomStart)
                         .fillMaxWidth(0.62f)
-                        .then(if (carouselFocused) Modifier.border(t.borderWidth, t.focusBorder, shape) else Modifier)
                         .onPreviewKeyEvent { event ->
                             val n = event.nativeKeyEvent
                             val delta = when (n.keyCode) {

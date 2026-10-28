@@ -93,4 +93,16 @@
     <string name="wx_snow">Nieve</string>
     <string name="wx_storm">Tormenta</string>
     <string name="shelf_carousel_hint">◀ ▶ ver más · OK para abrir</string>
+    <string name="wp_open">Fondo desde el móvil</string>
+    <string name="wp_profile">Fondo del perfil · %1$s</string>
+    <string name="wp_title">Envía una foto desde tu móvil</string>
+    <string name="wp_step_wifi">Conecta el móvil a la misma red Wi-Fi que la TV</string>
+    <string name="wp_step_scan">Escanea el código con la cámara</string>
+    <string name="wp_step_send">Escribe el código, elige la foto y pulsa «Enviar a la TV»</string>
+    <string name="wp_manual">O abre en el navegador: %1$s</string>
+    <string name="wp_code">Código: %1$s</string>
+    <string name="wp_remove">Quitar fondo</string>
+    <string name="wp_waiting">Esperando foto…</string>
+    <string name="wp_received">¡Foto recibida!</string>
+    <string name="wp_no_network">La TV no tiene red: revisa la Wi-Fi</string>
 </resources>

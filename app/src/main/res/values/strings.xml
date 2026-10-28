@@ -94,4 +94,16 @@
     <string name="wx_snow">Snow</string>
     <string name="wx_storm">Storm</string>
     <string name="shelf_carousel_hint">◀ ▶ more · OK to open</string>
+    <string name="wp_open">Background from phone</string>
+    <string name="wp_profile">Profile background · %1$s</string>
+    <string name="wp_title">Send a photo from your phone</string>
+    <string name="wp_step_wifi">Connect your phone to the same Wi-Fi as the TV</string>
+    <string name="wp_step_scan">Scan the code with the camera</string>
+    <string name="wp_step_send">Enter the code, choose the photo and tap "Enviar a la TV"</string>
+    <string name="wp_manual">Or open in the browser: %1$s</string>
+    <string name="wp_code">Code: %1$s</string>
+    <string name="wp_remove">Remove background</string>
+    <string name="wp_waiting">Waiting for photo…</string>
+    <string name="wp_received">Photo received!</string>
+    <string name="wp_no_network">The TV has no network: check the Wi-Fi</string>
 </resources>

@@ -21,6 +21,8 @@ data class Profile(
     /** Índice en [com.jhonatan.tvos.ui.theme.ProfileColors]. */
     val color: Int,
     val settings: UserSettings = UserSettings(),
+    /** Momento en que se cambió el fondo enviado desde el móvil; 0 = sin fondo. */
+    val backgroundVersion: Long = 0,
 )
 
 data class ProfilesState(
@@ -78,6 +80,11 @@ class ProfileStore(private val context: Context) {
         s.copy(profiles = s.profiles.map { if (it.id == id) it.copy(name = name.trim(), color = color) else it })
     }
 
+    /** version = 0 quita el fondo. */
+    suspend fun setBackground(id: String, version: Long) = edit { s ->
+        s.copy(profiles = s.profiles.map { if (it.id == id) it.copy(backgroundVersion = version) else it })
+    }
+
     suspend fun removeProfile(id: String) = edit { s ->
         if (s.profiles.size <= 1) return@edit s
         val rest = s.profiles.filterNot { it.id == id }
@@ -104,6 +111,7 @@ class ProfileStore(private val context: Context) {
                 id = o.optString("id"),
                 name = o.optString("name"),
                 color = o.optInt("color", 0),
+                backgroundVersion = o.optLong("bgVersion", 0),
                 settings = UserSettings.fromJson(o.optJSONObject("settings")),
             )
         }
@@ -118,6 +126,7 @@ class ProfileStore(private val context: Context) {
                     .put("id", it.id)
                     .put("name", it.name)
                     .put("color", it.color)
+                    .put("bgVersion", it.backgroundVersion)
                     .put("settings", it.settings.toJson()),
             )
         }

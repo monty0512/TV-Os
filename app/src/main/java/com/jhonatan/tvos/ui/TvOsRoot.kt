@@ -25,10 +25,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.jhonatan.tvos.data.AppRepository
+import com.jhonatan.tvos.data.Backgrounds
 import com.jhonatan.tvos.data.Images
 import com.jhonatan.tvos.data.Profile
 import com.jhonatan.tvos.data.ShelfItem
@@ -46,6 +48,7 @@ import com.jhonatan.tvos.ui.home.HomeScreen
 import com.jhonatan.tvos.ui.onboarding.OnboardingScreen
 import com.jhonatan.tvos.ui.profiles.ProfilesScreen
 import com.jhonatan.tvos.ui.settings.AppearanceScreen
+import com.jhonatan.tvos.ui.wallpaper.PhoneWallpaperScreen
 import com.jhonatan.tvos.ui.theme.LocalReducedEffects
 import com.jhonatan.tvos.ui.theme.LocalTv
 import com.jhonatan.tvos.ui.theme.tvColors
@@ -53,7 +56,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-private enum class Screen { ONBOARDING, PROFILES, HOME, EDIT, APPEARANCE }
+private enum class Screen { ONBOARDING, PROFILES, HOME, EDIT, APPEARANCE, PHONE_WALLPAPER }
 
 private const val LOG_TAG = "TvOs"
 private const val MAX_ROW_ITEMS = 10
@@ -86,6 +89,7 @@ fun TvOsRoot(
     var watchNext by remember { mutableStateOf<List<ShelfItem>>(emptyList()) }
     var weather by remember { mutableStateOf<WeatherNow?>(null) }
     var welcome by remember { mutableStateOf<Profile?>(null) }
+    var profileBackground by remember { mutableStateOf<ImageBitmap?>(null) }
     val latestState by rememberUpdatedState(stateOrNull)
 
     // Recarga la lista cuando se instala, actualiza o desinstala una app.
@@ -205,11 +209,18 @@ fun TvOsRoot(
         scope.launch { store.updateActive(transform) }
     }
 
+    // Fondo del perfil activo (enviado desde el móvil).
+    val backgroundUri = state.active?.let { Backgrounds.uri(context, it) }
+    LaunchedEffect(backgroundUri) {
+        profileBackground = backgroundUri?.let { Images.load(context, it, 1280, 720) }
+    }
+
     val canOpenControlCenter = current == Screen.HOME || current == Screen.EDIT || current == Screen.APPEARANCE
 
     BackHandler(enabled = current == Screen.HOME || current == Screen.ONBOARDING) { /* Un launcher no se cierra con Atrás. */ }
     BackHandler(enabled = current == Screen.PROFILES) { screen = Screen.HOME }
     BackHandler(enabled = current == Screen.APPEARANCE) { screen = Screen.HOME }
+    BackHandler(enabled = current == Screen.PHONE_WALLPAPER) { screen = Screen.APPEARANCE }
     BackHandler(enabled = current == Screen.EDIT) { screen = editReturn }
     BackHandler(enabled = controlCenterOpen) { controlCenterOpen = false }
 
@@ -257,7 +268,10 @@ fun TvOsRoot(
                         screen = Screen.HOME
                     },
                     onAdd = { name, color -> scope.launch { store.addProfile(name, color) } },
-                    onRemove = { id -> scope.launch { store.removeProfile(id) } },
+                    onRemove = { id ->
+                        Backgrounds.delete(context, id)
+                        scope.launch { store.removeProfile(id) }
+                    },
                 )
 
                 Screen.HOME -> HomeScreen(
@@ -267,6 +281,7 @@ fun TvOsRoot(
                     homeEvents = homeEvents,
                     profileName = state.active?.name.orEmpty(),
                     weather = weather,
+                    profileBackground = profileBackground,
                     appContent = appContent,
                     onLaunch = { app ->
                         Log.i(LOG_TAG, "launch ${app.packageName}")
@@ -316,8 +331,32 @@ fun TvOsRoot(
                         editReturn = Screen.APPEARANCE
                         screen = Screen.EDIT
                     },
+                    onPhoneWallpaper = { screen = Screen.PHONE_WALLPAPER },
                     onBack = { screen = Screen.HOME },
                 )
+
+                Screen.PHONE_WALLPAPER -> {
+                    val profile = state.active
+                    PhoneWallpaperScreen(
+                        profileName = profile?.name.orEmpty(),
+                        hasBackground = (profile?.backgroundVersion ?: 0L) != 0L,
+                        onPhoto = { bytes ->
+                            // Se llama desde el hilo del servidor: se guarda aquí y se avisa al perfil.
+                            val id = profile?.id
+                            val ok = id != null && runCatching { Backgrounds.save(context, id, bytes) }.getOrDefault(false)
+                            if (ok && id != null) scope.launch { store.setBackground(id, System.currentTimeMillis()) }
+                            ok
+                        },
+                        onRemove = {
+                            profile?.let {
+                                Backgrounds.delete(context, it.id)
+                                scope.launch { store.setBackground(it.id, 0) }
+                            }
+                            screen = Screen.APPEARANCE
+                        },
+                        onBack = { screen = Screen.APPEARANCE },
+                    )
+                }
             }
 
             if (controlCenterOpen) {

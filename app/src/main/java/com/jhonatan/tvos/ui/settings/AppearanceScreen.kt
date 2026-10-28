@@ -46,6 +46,7 @@ fun AppearanceScreen(
     settings: UserSettings,
     onChange: ((UserSettings) -> UserSettings) -> Unit,
     onReorder: () -> Unit,
+    onPhoneWallpaper: () -> Unit,
     onBack: () -> Unit,
 ) {
     val t = LocalTv.current
@@ -138,6 +139,7 @@ fun AppearanceScreen(
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             TvButton(text = stringResource(R.string.reorder_apps), onClick = onReorder)
+            TvButton(text = stringResource(R.string.wp_open), onClick = onPhoneWallpaper)
             TvButton(text = stringResource(R.string.back), onClick = onBack)
         }
 
