@@ -37,6 +37,14 @@ Diseño de muestra aprobado (8 pantallas): https://claude.ai/artifact/CbV4gxiAQK
 | Instalación y actualización | Solo con el script de PC (APK + permisos + limpieza) |
 | Nombre | TV-Os |
 
+## Decisiones tras el diagnóstico
+| Tema | Decisión |
+|---|---|
+| MiLauncher (`com.jhonatan.milauncher`) | Se conserva instalado como Inicio de respaldo |
+| Interfaz | Compose for TV con presupuesto de memoria medido en la Fase 1; si no lo cumple, Views |
+| Limpieza | Grupo seguro + actualizaciones Xiaomi + multimedia USB Xiaomi + compartir pantalla Xiaomi (`tools/adb-kit/debloat-list.txt`) |
+| Liberar memoria | Botón en el Centro de control (`killBackgroundProcesses`) |
+
 ## Arquitectura
 - Kotlin + Jetpack Compose for TV, `minSdk 29` (Android 10), solo `armeabi-v7a`/sin código nativo. Presupuesto de memoria: < 60 MB PSS en Inicio.
 - DataStore (ajustes) + Room (perfiles). Sin servicios en la nube.

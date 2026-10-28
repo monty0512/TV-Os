@@ -1,0 +1,41 @@
+# TV-Os · Lista de limpieza "equilibrada" para Xiaomi MiTV-MOOQ0 (Android 10)
+# Se aplica en la Fase 4 con `pm disable-user --user 0 <paquete>` (reversible con `pm enable`).
+# Las funciones se deducen del nombre del paquete: Xiaomi no las documenta.
+# Formato: paquete  # motivo
+
+# --- Telemetría ---
+com.miui.tv.analytics                  # telemetría Xiaomi
+com.xiaomi.statistic                   # telemetría Xiaomi
+
+# --- PatchWall y extras de Xiaomi ---
+com.mitv.tvhome.atv                    # PatchWall (launcher Xiaomi)
+com.mitv.tvhome.michannel              # canales PatchWall (ya desactivado)
+fusion.android.tv.demo                 # modo demo de tienda
+com.xiaomi.mimusic2                    # Mi Music
+com.xiaomi.floatingframe               # ventana flotante Xiaomi
+com.xm.webcontent                      # contenido web Xiaomi
+com.xiaomo.tv.milegal                  # textos legales Xiaomi
+com.mitv.dream                         # salvapantallas Xiaomi (se usa Backdrop)
+com.xiaomi.amazon.alexa                # Alexa (ya desactivado)
+com.mitv.tvlock                        # bloqueo Xiaomi (ya desactivado)
+
+# --- Aprobados del grupo dudoso ---
+com.xiaomi.mitv.updateservice          # actualizaciones de firmware Xiaomi
+com.xiaomi.mitv.mediaexplorer          # explorador USB Xiaomi
+com.mitv.videoplayer                   # reproductor de vídeo Xiaomi
+com.mitv.gallery                       # galería Xiaomi (ya desactivado)
+com.mitv.milinkservice                 # compartir pantalla Xiaomi
+com.xiaomi.mitv.smartshare             # compartir pantalla Xiaomi
+com.xiaomi.wfdsinkhelperservice        # Miracast
+
+# --- Google sin uso con TV-Os ---
+com.google.android.tvrecommendations   # recomendaciones del launcher de Google
+com.google.android.videos              # Play Películas
+com.google.android.play.games          # Play Juegos
+com.google.android.tv.bugreportsender  # envío de informes de errores
+
+# --- NUNCA tocar (el script los rechaza) ---
+# com.mediatek.* mediatek.* com.mstar.* mitv.service com.xiaomi.mitv.res
+# com.android.tv.settings com.duokan.factorytest com.android.vending
+# com.google.android.apps.mediashell com.google.android.katniss
+# com.google.android.tv.assistant com.google.android.gms com.google.android.inputmethod.latin
