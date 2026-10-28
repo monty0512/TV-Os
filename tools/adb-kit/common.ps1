@@ -31,3 +31,26 @@ function Sh([string]$Cmd) {
 function Get-CurrentHome {
     return ((Sh "cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME") | Select-Object -Last 1).Trim()
 }
+
+# Paquetes que la limpieza nunca toca (sistema de la TV, Play Store, Chromecast, Asistente, teclado, TV-Os y respaldo).
+function Test-Protected([string]$Pkg) {
+    if ($Pkg -match '^(com\.mediatek\.|mediatek\.|com\.mstar\.)') { return $true }
+    return @("mitv.service", "com.xiaomi.mitv.res", "com.android.tv.settings", "com.duokan.factorytest",
+        "com.android.vending", "com.google.android.apps.mediashell", "com.google.android.katniss",
+        "com.google.android.tv.assistant", "com.google.android.gms", "com.google.android.inputmethod.latin",
+        $script:TvosPkg, "com.jhonatan.milauncher", "android", "com.android.systemui") -contains $Pkg
+}
+
+# Paquetes de una lista (sin comentarios ni líneas vacías).
+function Read-List([string]$Path) {
+    return @(Get-Content -Encoding UTF8 $Path | ForEach-Object { ($_ -replace "#.*", "").Trim() } | Where-Object { $_ -ne "" })
+}
+
+# Estado de un paquete: enabled, disabled o missing.
+function Get-PkgState([string]$Pkg) {
+    if (((Sh "pm path $Pkg") -join "").Trim() -eq "") { return "missing" }
+    if ((Sh "pm list packages -d") -contains "package:$Pkg") { return "disabled" }
+    return "enabled"
+}
+
+$script:AnimKeys = @("window_animation_scale", "transition_animation_scale", "animator_duration_scale")

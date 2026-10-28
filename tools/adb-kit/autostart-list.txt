@@ -1,0 +1,8 @@
+# TV-Os · Apps que arrancan solas al encender la TV (visto en logcat) y se restringen en segundo plano.
+# Sin root no se puede bloquear su arranque; se limita lo que hacen después:
+#   cmd appops set <paquete> RUN_ANY_IN_BACKGROUND ignore   (sin tareas, alarmas ni servicios en segundo plano)
+#   am set-standby-bucket <paquete> rare                    (menos tiempo de ejecución; se reajusta al usar la app)
+# Prime Video queda fuera por decisión del usuario. AnyDesk se desactiva entera (debloat-list.txt).
+# Formato: paquete  # motivo
+
+tv.twitch.android.app                  # Twitch (RecommendationsBroadcastReceiver al encender)

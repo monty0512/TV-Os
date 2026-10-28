@@ -69,7 +69,10 @@ Objetivo: **menos de 70 MB PSS** con el Inicio en pantalla. El script también m
 | `launch-time.*` | Mide cuánto tarda en abrir Netflix y Disney+ desde cero |
 | `logs.*` | Registra teclas del mando y aperturas de apps para diagnosticar fallos |
 | `common.*` | Funciones compartidas |
-| `debloat-list.txt` | Lista de limpieza (se aplica en la Fase 4) |
+| `cleanup.*` | Limpieza: desactiva apps, restringe el arranque automático y acelera animaciones |
+| `cleanup-restore.*` | Deshace la limpieza desde el respaldo guardado |
+| `debloat-list.txt` | Apps que se desactivan |
+| `autostart-list.txt` | Apps que se restringen en segundo plano |
 
 ## Medir la apertura de apps
 Compara el tiempo de arranque en frío con TV-Os y con MiLauncher:
@@ -78,4 +81,20 @@ powershell -ExecutionPolicy Bypass -File .\launch-time.ps1 192.168.1.128
 powershell -ExecutionPolicy Bypass -File .\restore-home.ps1 192.168.1.128
 powershell -ExecutionPolicy Bypass -File .\launch-time.ps1 192.168.1.128
 powershell -ExecutionPolicy Bypass -File .\install.ps1 192.168.1.128
+```
+
+## Limpieza (Fase 4)
+```powershell
+powershell -ExecutionPolicy Bypass -File .\cleanup.ps1 192.168.1.128
+```
+1. Lee el estado actual y lo guarda en `reports/limpieza-respaldo-<fecha>.txt`.
+2. Muestra la lista exacta y pide confirmación.
+3. Desactiva las apps de `debloat-list.txt` (`pm disable-user --user 0`), restringe en segundo plano las de `autostart-list.txt` (`RUN_ANY_IN_BACKGROUND ignore` + grupo `rare`) y pone las animaciones a 0.5.
+
+Rechaza cualquier paquete protegido (sistema de la TV, Play Store, Chromecast, Asistente, Google Play Services, teclado, TV-Os y MiLauncher).
+Sin root no se puede impedir que una app arranque al encender; solo limitar lo que hace después o desactivarla entera.
+
+Deshacer (usa el respaldo más reciente):
+```powershell
+powershell -ExecutionPolicy Bypass -File .\cleanup-restore.ps1 192.168.1.128
 ```

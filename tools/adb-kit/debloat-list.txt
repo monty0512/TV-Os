@@ -1,5 +1,5 @@
 # TV-Os · Lista de limpieza "equilibrada" para Xiaomi MiTV-MOOQ0 (Android 10)
-# Se aplica en la Fase 4 con `pm disable-user --user 0 <paquete>` (reversible con `pm enable`).
+# Se aplica con cleanup.ps1 / cleanup.sh (`pm disable-user --user 0`); se deshace con cleanup-restore.
 # Las funciones se deducen del nombre del paquete: Xiaomi no las documenta.
 # Formato: paquete  # motivo
 
@@ -33,6 +33,9 @@ com.google.android.tvrecommendations   # recomendaciones del launcher de Google
 com.google.android.videos              # Play Películas
 com.google.android.play.games          # Play Juegos
 com.google.android.tv.bugreportsender  # envío de informes de errores
+
+# --- Arranque automático (desactivada entera: sin root no se puede bloquear solo el arranque) ---
+com.anydesk.anydeskandroid             # AnyDesk (arranca al encender la TV)
 
 # --- NUNCA tocar (el script los rechaza) ---
 # com.mediatek.* mediatek.* com.mstar.* mitv.service com.xiaomi.mitv.res

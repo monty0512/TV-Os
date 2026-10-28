@@ -60,8 +60,8 @@ Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQ
 0. Diagnóstico de solo lectura ✅
 1. Inicio, ordenar/ocultar apps, apariencia ✅
 2. Perfiles, bienvenida, Centro de control ✅ (v0.2.3, verificado en el MiTV)
-3. Top Shelf + Continuar viendo, fondo desde el móvil, clima ← **siguiente**
-4. Kit ADB de limpieza completa con opción de deshacer
+3. Top Shelf + Continuar viendo, fondo desde el móvil, clima ✅
+4. Kit ADB de limpieza completa con opción de deshacer ← **en prueba**
 
 ## Fase 2 (decisiones)
 | Tema | Decisión |
@@ -97,3 +97,11 @@ Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQ
 | QR | ZXing core 3.5.3 (solo generación) |
 | Carrusel | Sin recuadro azul al enfocarlo: indicadores + texto de ayuda |
 | Foto de perfil | Mismo flujo QR: "Foto de perfil desde el móvil", recorte cuadrado 320×320; sustituye a la inicial en todos los avatares (v0.4.1) |
+
+## Fase 4 (limpieza)
+| Tema | Decisión |
+|---|---|
+| Apps desactivadas | `debloat-list.txt` (incluye Play Películas, Play Juegos y AnyDesk entera) |
+| Arranque automático | Sin root no se puede bloquear el receptor de arranque (`pm disable` de componentes da "Shell cannot change component state"). Twitch: `RUN_ANY_IN_BACKGROUND ignore` + grupo `rare`. Prime Video sin tocar (decisión del usuario) |
+| Animaciones | 0.5 en las tres escalas |
+| Deshacer | Respaldo del estado previo en `reports/`; `cleanup-restore` lo aplica |
