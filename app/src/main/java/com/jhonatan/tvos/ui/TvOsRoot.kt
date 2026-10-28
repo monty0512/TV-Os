@@ -52,7 +52,13 @@ private enum class Screen { ONBOARDING, PROFILES, HOME, EDIT, APPEARANCE }
 private const val LOG_TAG = "TvOs"
 
 @Composable
-fun TvOsRoot(homeEvents: Int, controlCenterEvents: Int, foreground: Boolean, trimEvents: Int) {
+fun TvOsRoot(
+    homeEvents: Int,
+    controlCenterEvents: Int,
+    controlCenterToggles: Int,
+    foreground: Boolean,
+    trimEvents: Int,
+) {
     val context = LocalContext.current
     val store = remember { ProfileStore(context.applicationContext) }
     val repo = remember { AppRepository(context.applicationContext) }
@@ -147,6 +153,10 @@ fun TvOsRoot(homeEvents: Int, controlCenterEvents: Int, foreground: Boolean, tri
     LaunchedEffect(controlCenterEvents) {
         if (controlCenterEvents > 0 && state.onboarded) controlCenterOpen = true
     }
+    // ≡ con TV-Os ya en pantalla: abre o cierra.
+    LaunchedEffect(controlCenterToggles) {
+        if (controlCenterToggles > 0 && state.onboarded) controlCenterOpen = !controlCenterOpen
+    }
 
     val current = screen ?: initialScreen(state)
     val settings = state.active?.settings ?: UserSettings()
@@ -184,7 +194,8 @@ fun TvOsRoot(homeEvents: Int, controlCenterEvents: Int, foreground: Boolean, tri
                     if (n.action == NativeKeyEvent.ACTION_DOWN && n.repeatCount == 0) {
                         Log.d(LOG_TAG, "key ${NativeKeyEvent.keyCodeToString(n.keyCode)} (${n.keyCode})")
                     }
-                    if (n.keyCode != NativeKeyEvent.KEYCODE_MENU || !canOpenControlCenter) return@onPreviewKeyEvent false
+                    val isMenuKey = n.keyCode == NativeKeyEvent.KEYCODE_MENU || n.keyCode == NativeKeyEvent.KEYCODE_SETTINGS
+                    if (!isMenuKey || !canOpenControlCenter) return@onPreviewKeyEvent false
                     if (n.action == NativeKeyEvent.ACTION_UP) controlCenterOpen = !controlCenterOpen
                     true
                 },

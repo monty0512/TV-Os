@@ -75,6 +75,9 @@
     <string name="cc_volume">Volume</string>
     <string name="cc_power_off">Turn off TV</string>
     <string name="cc_power_unavailable">Turning off is not enabled: run install again from the PC (it enables the TV-Os accessibility service).</string>
-    <string name="cc_hint">≡ or Back to close</string>
-    <string name="a11y_description">TV-Os uses this service only to turn off the screen (timer and Turn off button) and to open the Control Center with the ≡ button from any app. It does not read screen content.</string>
+    <string name="cc_hint">Hold ≡, SET or Back to close</string>
+    <string name="a11y_description">TV-Os uses this service only to turn off the screen (timer and Turn off button) and to open the Control Center (hold ≡ or press SET) from any app. It does not read screen content.</string>
+    <string name="cc_free_of">%1$d of %2$d MB free</string>
+    <string name="cc_free_of_freed">%1$d of %2$d MB free · +%3$d MB</string>
+    <string name="cc_settings">TV settings</string>
 </resources>

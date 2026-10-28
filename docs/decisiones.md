@@ -66,7 +66,7 @@ Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQ
 ## Fase 2 (decisiones)
 | Tema | Decisión |
 |---|---|
-| Abrir Centro de control | Botón junto al reloj (▲ desde la primera fila). ≡ desde cualquier app vía accesibilidad (por verificar). Verificado: el ≡ no llega a las apps y la pulsación larga de Inicio va a `com.duokan.factorytest` |
+| Abrir Centro de control | **Mantener ≡** (el mando no tiene botón de casa: ≡ envía `KEY_HOMEPAGE` → `KEYCODE_HOME`; corto = Inicio) o **SET** (`KEY_TASKMANAGER` → `KEYCODE_SETTINGS`), desde cualquier app vía accesibilidad. También el botón junto al reloj. Verificado con `getevent` |
 | Perfil guarda | Fila de apps (orden y favoritas), apps ocultas, tema, acento, tamaño y accesibilidad. El fondo llega en la Fase 3 |
 | Selector de perfiles | Al encender la TV (salir del reposo) si hay más de un perfil |
 | Centro de control | Perfil, liberar memoria, temporizador (15/30/60/90), entradas, Wi-Fi, imagen, volumen y apagar |

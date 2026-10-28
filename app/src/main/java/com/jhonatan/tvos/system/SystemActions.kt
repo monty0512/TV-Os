@@ -88,6 +88,16 @@ object Memory {
         (availableMb(am) - before).coerceAtLeast(0)
     }
 
+    fun totalMb(context: Context): Int {
+        val am = context.getSystemService(ActivityManager::class.java) ?: return 0
+        val info = ActivityManager.MemoryInfo()
+        am.getMemoryInfo(info)
+        return (info.totalMem / (1024 * 1024)).toInt()
+    }
+
+    fun availableMb(context: Context): Int =
+        context.getSystemService(ActivityManager::class.java)?.let { availableMb(it) } ?: 0
+
     fun availableMb(am: ActivityManager): Int {
         val info = ActivityManager.MemoryInfo()
         am.getMemoryInfo(info)
@@ -120,18 +130,18 @@ object Inputs {
 object Volume {
     private fun am(context: Context) = context.getSystemService(AudioManager::class.java)
 
-    /** Volumen actual en 0..1. */
-    fun level(context: Context): Float {
-        val am = am(context) ?: return 0f
-        val max = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
-        return am.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / max
+    /** Volumen actual y máximo del sistema. */
+    fun level(context: Context): Pair<Int, Int> {
+        val am = am(context) ?: return 0 to 1
+        return am.getStreamVolume(AudioManager.STREAM_MUSIC) to am.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
     }
 
+    /** Sube o baja un paso y muestra el indicador de volumen del sistema (el de Xiaomi). */
     fun step(context: Context, up: Boolean) {
         am(context)?.adjustStreamVolume(
             AudioManager.STREAM_MUSIC,
             if (up) AudioManager.ADJUST_RAISE else AudioManager.ADJUST_LOWER,
-            0,
+            AudioManager.FLAG_SHOW_UI,
         )
     }
 }
@@ -153,9 +163,13 @@ object Network {
 object SystemSettings {
     fun openWifi(context: Context) = open(context, Settings.ACTION_WIFI_SETTINGS)
 
-    /** Ajustes de imagen: Android TV no tiene un atajo estándar; se intenta pantalla y, si no, Ajustes. */
-    fun openPicture(context: Context) =
-        open(context, Settings.ACTION_DISPLAY_SETTINGS) || open(context, Settings.ACTION_SETTINGS)
+    /**
+     * Ajustes de imagen: Android TV no tiene un atajo estándar y en el MiTV ACTION_DISPLAY_SETTINGS abre la Wi-Fi
+     * (verificado). Hasta conocer la pantalla de imagen de Xiaomi se abren los Ajustes generales.
+     */
+    fun openPicture(context: Context) = openSettings(context)
+
+    fun openSettings(context: Context) = open(context, Settings.ACTION_SETTINGS)
 
     private fun open(context: Context, action: String): Boolean = runCatching {
         context.startActivity(Intent(action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))

@@ -27,20 +27,25 @@ class MainActivity : ComponentActivity() {
     /** Se incrementa cuando Android pide memoria con TV-Os en segundo plano. */
     private var trimEvents by mutableIntStateOf(0)
 
+    /** Se incrementa al pulsar ≡ con TV-Os ya en pantalla: abre o cierra el Centro de control. */
+    private var controlCenterToggles by mutableIntStateOf(0)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (intent?.action.isControlCenter()) controlCenterEvents++
-        setContent { TvOsRoot(homeEvents, controlCenterEvents, foreground, trimEvents) }
+        setContent { TvOsRoot(homeEvents, controlCenterEvents, controlCenterToggles, foreground, trimEvents) }
     }
 
     override fun onStart() {
         super.onStart()
         foreground = true
+        isVisible = true
     }
 
     override fun onStop() {
         super.onStop()
         foreground = false
+        isVisible = false
     }
 
     @Suppress("DEPRECATION")
@@ -51,7 +56,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        if (intent.action.isControlCenter()) controlCenterEvents++ else homeEvents++
+        when {
+            intent.action.isControlCenter() && intent.getBooleanExtra(EXTRA_TOGGLE, false) -> controlCenterToggles++
+            intent.action.isControlCenter() -> controlCenterEvents++
+            else -> homeEvents++
+        }
     }
 
     private fun String?.isControlCenter() = this == Intent.ACTION_ALL_APPS || this == ACTION_CONTROL_CENTER
@@ -59,5 +68,11 @@ class MainActivity : ComponentActivity() {
     companion object {
         /** Lo envía el servicio de accesibilidad al pulsar ≡ en cualquier app. */
         const val ACTION_CONTROL_CENTER = "com.jhonatan.tvos.CONTROL_CENTER"
+        const val EXTRA_TOGGLE = "toggle"
+
+        /** true mientras TV-Os está en pantalla (lo consulta el servicio de accesibilidad). */
+        @Volatile
+        var isVisible = false
+            private set
     }
 }

@@ -19,7 +19,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -85,7 +84,9 @@ fun ControlCenter(
     var sleepMin by remember { mutableIntStateOf(SleepTimer.remainingMinutes(context)) }
     var showInputs by remember { mutableStateOf(false) }
     val inputs = remember { Inputs.list(context) }
-    var volume by remember { mutableFloatStateOf(Volume.level(context)) }
+    var volume by remember { mutableStateOf(Volume.level(context)) }
+    var freeMb by remember { mutableIntStateOf(Memory.availableMb(context)) }
+    val totalMb = remember { Memory.totalMb(context) }
     var powerMissing by remember { mutableStateOf(false) }
     val network = remember { Network.kind(context) }
     val now = remember { Date() }
@@ -127,8 +128,8 @@ fun ControlCenter(
                     title = stringResource(R.string.cc_free_memory),
                     value = when {
                         freeing -> stringResource(R.string.cc_freeing)
-                        freedMb != null -> stringResource(R.string.cc_freed, freedMb ?: 0)
-                        else -> ""
+                        freedMb != null -> stringResource(R.string.cc_free_of_freed, freeMb, totalMb, freedMb ?: 0)
+                        else -> stringResource(R.string.cc_free_of, freeMb, totalMb)
                     },
                     modifier = Modifier.weight(1f),
                     onClick = {
@@ -136,6 +137,7 @@ fun ControlCenter(
                             freeing = true
                             scope.launch {
                                 freedMb = Memory.freeBackgroundApps(context)
+                                freeMb = Memory.availableMb(context)
                                 freeing = false
                             }
                         }
@@ -192,6 +194,15 @@ fun ControlCenter(
                     },
                 )
             }
+            CcTile(
+                title = stringResource(R.string.cc_settings),
+                value = "",
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    SystemSettings.openSettings(context)
+                    onClose()
+                },
+            )
             if (showInputs) {
                 inputs.forEach { input ->
                     TvButton(input.label, onClick = {
@@ -206,14 +217,18 @@ fun ControlCenter(
                 Modifier.fillMaxWidth().background(t.tile, RoundedCornerShape(16.dp)).padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                TvText(stringResource(R.string.cc_volume), 14.sp, color = t.fgMuted)
+                val (vol, volMax) = volume
+                Row(Modifier.fillMaxWidth()) {
+                    TvText(stringResource(R.string.cc_volume), 14.sp, color = t.fgMuted, modifier = Modifier.weight(1f))
+                    TvText("$vol / $volMax", 14.sp, weight = FontWeight.SemiBold)
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                     TvButton("−", onClick = {
                         Volume.step(context, up = false)
                         volume = Volume.level(context)
                     })
                     Box(Modifier.weight(1f).height(8.dp).background(t.fgMuted.copy(alpha = 0.3f), RoundedCornerShape(4.dp))) {
-                        Box(Modifier.fillMaxWidth(volume).height(8.dp).background(t.fg, RoundedCornerShape(4.dp)))
+                        Box(Modifier.fillMaxWidth(vol.toFloat() / volMax).height(8.dp).background(t.fg, RoundedCornerShape(4.dp)))
                     }
                     TvButton("+", onClick = {
                         Volume.step(context, up = true)

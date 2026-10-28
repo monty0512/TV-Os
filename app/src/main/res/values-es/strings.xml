@@ -74,6 +74,9 @@
     <string name="cc_volume">Volumen</string>
     <string name="cc_power_off">Apagar TV</string>
     <string name="cc_power_unavailable">El apagado no está activado: vuelve a ejecutar install desde el PC (activa el servicio de accesibilidad de TV-Os).</string>
-    <string name="cc_hint">≡ o Atrás para cerrar</string>
-    <string name="a11y_description">TV-Os usa este servicio solo para apagar la pantalla (temporizador y botón Apagar) y para abrir el Centro de control con el botón ≡ desde cualquier app. No lee el contenido de la pantalla.</string>
+    <string name="cc_hint">Mantén ≡, SET o Atrás para cerrar</string>
+    <string name="a11y_description">TV-Os usa este servicio solo para apagar la pantalla (temporizador y botón Apagar) y para abrir el Centro de control (mantener ≡ o pulsar SET) desde cualquier app. No lee el contenido de la pantalla.</string>
+    <string name="cc_free_of">%1$d de %2$d MB libres</string>
+    <string name="cc_free_of_freed">%1$d de %2$d MB libres · +%3$d MB</string>
+    <string name="cc_settings">Ajustes de la TV</string>
 </resources>
