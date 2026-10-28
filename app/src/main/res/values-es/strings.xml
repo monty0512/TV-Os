@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="shelf_no_channel">Aún sin canal de vista previa</string>
-    <string name="shelf_hint">OK para abrir · Mantén OK para ordenar</string>
+    <string name="shelf_hint">OK para abrir · Mantén OK para ordenar · ▼ para ver todas las apps</string>
+    <string name="all_apps">TODAS LAS APPS</string>
+    <string name="drawer_hint">▲ en la primera fila vuelve al Top Shelf</string>
     <string name="loading_apps">Cargando apps…</string>
     <string name="personalize">Personalizar</string>
     <string name="edit_title">Editar fila de inicio</string>
-    <string name="edit_hint">Selecciona una app con OK, muévela con izquierda/derecha y pulsa OK otra vez para soltarla. Atrás guarda.</string>
+    <string name="edit_hint">Selecciona una app con OK, muévela con las flechas y pulsa OK otra vez para soltarla. La primera fila son tus favoritas. Atrás guarda.</string>
     <string name="edit_moving">Moviendo: %1$s</string>
     <string name="edit_selected">Seleccionada: %1$s</string>
     <string name="hide">Ocultar</string>
@@ -23,8 +25,9 @@
     <string name="accent_green">Verde</string>
     <string name="accent_purple">Morado</string>
     <string name="size">Tamaño de iconos</string>
-    <string name="size_large">Grande (5 por fila)</string>
-    <string name="size_compact">Compacto (7 por fila)</string>
+    <string name="size_large">Grande (5 columnas)</string>
+    <string name="size_medium">Mediano (6 columnas)</string>
+    <string name="size_compact">Compacto (7 columnas)</string>
     <string name="large_text">Texto grande</string>
     <string name="high_contrast">Alto contraste</string>
     <string name="toggle_value">%1$s: %2$s</string>

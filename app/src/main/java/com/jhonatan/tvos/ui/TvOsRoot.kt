@@ -148,13 +148,17 @@ fun TvOsRoot(homeEvents: Int, foreground: Boolean) {
             Screen.EDIT -> EditScreen(
                 visible = visible,
                 hidden = hiddenApps,
+                density = settings.density,
                 initialSelected = editInitial,
                 onMove = { pkg, delta ->
+                    // Como en Apple TV: la app se saca de su sitio y se inserta en el destino;
+                    // el resto se reacomoda. ▲▼ mueven una fila entera (delta = ±columnas).
                     val list = visible.map { it.packageName }.toMutableList()
                     val i = list.indexOf(pkg)
-                    val j = i + delta
-                    if (i >= 0 && j in list.indices) {
-                        list[i] = list[j].also { list[j] = list[i] }
+                    val j = (i + delta).coerceIn(0, list.lastIndex)
+                    if (i >= 0 && j != i) {
+                        list.removeAt(i)
+                        list.add(j, pkg)
                         update { it.copy(order = list) }
                     }
                 },

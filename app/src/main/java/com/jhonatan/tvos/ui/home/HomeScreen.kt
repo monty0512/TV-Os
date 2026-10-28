@@ -2,6 +2,7 @@ package com.jhonatan.tvos.ui.home
 
 import android.text.format.DateFormat
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,15 +10,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,6 +35,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -51,13 +56,29 @@ import com.jhonatan.tvos.ui.theme.TvText
 import kotlinx.coroutines.delay
 import java.util.Date
 
-data class TileSize(val width: Dp, val height: Dp, val gap: Dp, val shelf: Dp)
+/** Margen lateral de todo el Inicio. */
+val SidePadding = 48.dp
+private val ShelfHeight = 250.dp
+private val DrawerHeaderHeight = 52.dp
 
-fun tileSize(density: Density) = when (density) {
-    Density.LARGE -> TileSize(156.dp, 88.dp, 20.dp, 270.dp)
-    Density.COMPACT -> TileSize(112.dp, 63.dp, 16.dp, 300.dp)
+data class TileSize(val columns: Int, val width: Dp, val height: Dp, val gap: Dp)
+
+/** Columnas según Apariencia (5/6/7); el tile ocupa toda la celda en 16:9. */
+fun tileSize(density: Density, screenWidth: Dp): TileSize {
+    val (columns, gap) = when (density) {
+        Density.LARGE -> 5 to 20.dp
+        Density.MEDIUM -> 6 to 18.dp
+        Density.COMPACT -> 7 to 16.dp
+    }
+    val width = (screenWidth - SidePadding * 2 - gap * (columns - 1)) / columns
+    return TileSize(columns, width, width * 9 / 16, gap)
 }
 
+/**
+ * Inicio al estilo Apple TV (pantallas 9 y 10 del diseño):
+ * Top Shelf + primera fila de favoritas; al bajar, el Top Shelf se recoge y la cuadrícula
+ * con todas las apps ocupa la pantalla.
+ */
 @Composable
 fun HomeScreen(
     apps: List<TvApp>,
@@ -70,58 +91,53 @@ fun HomeScreen(
 ) {
     val t = LocalTv.current
     val reduced = LocalReducedEffects.current
-    val size = tileSize(density)
+    val size = tileSize(density, LocalConfiguration.current.screenWidthDp.dp)
     var focusedIdx by remember { mutableIntStateOf(0) }
     val focusedApp = apps.getOrNull(focusedIdx)
+    // Fuera de la primera fila = cajón desplegado.
+    val inDrawer = focusedIdx >= size.columns
 
     val shelfTarget = focusedApp?.let { if (t.isDark) darken(it.color, 0.6f) else lighten(it.color, 0.7f) } ?: t.tile
     val shelfColor by animateColorAsState(shelfTarget, tween(if (reduced) 0 else 300), label = "shelf")
+    val headerHeight by animateDpAsState(
+        targetValue = if (inDrawer) DrawerHeaderHeight else ShelfHeight,
+        animationSpec = tween(if (reduced) 140 else 260),
+        label = "header",
+    )
 
     val firstFocus = remember { FocusRequester() }
-    val listState = rememberLazyListState()
-    // Al pulsar Inicio (o al cargar): foco en la primera app.
+    val gridState = rememberLazyGridState()
+    // Al pulsar Inicio (o al cargar): arriba del todo y foco en la primera favorita.
     LaunchedEffect(homeEvents, apps.isNotEmpty()) {
         if (apps.isEmpty()) return@LaunchedEffect
-        listState.scrollToItem(0)
+        focusedIdx = 0
+        gridState.scrollToItem(0)
         withFrameNanos { }
         runCatching { firstFocus.requestFocus() }
     }
 
     Column(Modifier.fillMaxSize().background(t.bg)) {
-        // --- Top Shelf ---
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(size.shelf)
-                .background(shelfColor)
-                .padding(horizontal = 48.dp, vertical = 28.dp),
+                .height(headerHeight)
+                .background(if (inDrawer) drawerHeaderColor(t.isDark) else shelfColor)
+                .padding(horizontal = SidePadding),
         ) {
-            TvText(
-                text = stringResource(R.string.app_name).uppercase(),
-                size = 12.sp,
-                weight = FontWeight.SemiBold,
-                color = t.fgMuted,
-                modifier = Modifier.align(Alignment.TopStart),
-            )
-            Clock(Modifier.align(Alignment.TopEnd))
-            Column(Modifier.align(Alignment.BottomStart)) {
-                TvText(stringResource(R.string.shelf_no_channel), 13.sp, color = t.fgMuted)
-                Spacer(Modifier.height(6.dp))
-                TvText(
-                    text = focusedApp?.label ?: stringResource(R.string.loading_apps),
-                    size = 52.sp,
-                    weight = FontWeight.Bold,
-                )
-                Spacer(Modifier.height(6.dp))
-                TvText(stringResource(R.string.shelf_hint), 13.sp, color = t.fgMuted)
+            if (inDrawer) {
+                DrawerHeader(focusedApp?.label ?: stringResource(R.string.personalize))
+            } else {
+                TopShelf(focusedApp)
             }
         }
 
-        // --- Fila de apps ---
-        LazyRow(
-            state = listState,
-            contentPadding = PaddingValues(horizontal = 48.dp, vertical = 22.dp),
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(size.columns),
+            state = gridState,
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            contentPadding = PaddingValues(start = SidePadding, end = SidePadding, top = 18.dp, bottom = 48.dp),
             horizontalArrangement = Arrangement.spacedBy(size.gap),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             itemsIndexed(apps, key = { _, app -> app.packageName }) { i, app ->
                 AppTile(
@@ -135,17 +151,58 @@ fun HomeScreen(
                 )
             }
             item(key = "personalize") {
-                PersonalizeTile(size, onPersonalize)
+                PersonalizeTile(size, onClick = onPersonalize, onFocused = { focusedIdx = apps.size })
             }
         }
         if (loading && apps.isEmpty()) {
-            TvText(stringResource(R.string.loading_apps), 16.sp, color = t.fgMuted, modifier = Modifier.padding(start = 48.dp))
+            TvText(stringResource(R.string.loading_apps), 16.sp, color = t.fgMuted, modifier = Modifier.padding(start = SidePadding))
+        }
+    }
+}
+
+private fun drawerHeaderColor(dark: Boolean) = if (dark) Color(0xFF141416) else Color(0xFFE5E5EA)
+
+@Composable
+private fun TopShelf(focusedApp: TvApp?) {
+    val t = LocalTv.current
+    Box(Modifier.fillMaxSize().padding(vertical = 24.dp)) {
+        TvText(
+            text = stringResource(R.string.app_name).uppercase(),
+            size = 12.sp,
+            weight = FontWeight.SemiBold,
+            color = t.fgMuted,
+            modifier = Modifier.align(Alignment.TopStart),
+        )
+        Clock(Modifier.align(Alignment.TopEnd))
+        Column(Modifier.align(Alignment.BottomStart)) {
+            TvText(stringResource(R.string.shelf_no_channel), 13.sp, color = t.fgMuted)
+            Spacer(Modifier.height(4.dp))
+            TvText(
+                text = focusedApp?.label ?: stringResource(R.string.loading_apps),
+                size = 48.sp,
+                weight = FontWeight.Bold,
+            )
+            Spacer(Modifier.height(4.dp))
+            TvText(stringResource(R.string.shelf_hint), 13.sp, color = t.fgMuted)
         }
     }
 }
 
 @Composable
-private fun PersonalizeTile(size: TileSize, onClick: () -> Unit) {
+private fun DrawerHeader(focusedLabel: String) {
+    val t = LocalTv.current
+    Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+        TvText(stringResource(R.string.all_apps), 12.sp, weight = FontWeight.SemiBold, color = t.fgMuted)
+        Spacer(Modifier.size(14.dp))
+        TvText(focusedLabel, 18.sp, weight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        TvText(stringResource(R.string.drawer_hint), 13.sp, color = t.fgMuted)
+        Spacer(Modifier.size(18.dp))
+        Clock()
+    }
+}
+
+@Composable
+private fun PersonalizeTile(size: TileSize, onClick: () -> Unit, onFocused: () -> Unit) {
     val t = LocalTv.current
     var focused by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(14.dp)
@@ -154,7 +211,13 @@ private fun PersonalizeTile(size: TileSize, onClick: () -> Unit) {
             .size(size.width, size.height)
             .background(if (focused) t.tileFocused else t.tile, shape)
             .then(if (focused) Modifier.border(t.borderWidth, t.focusBorder, shape) else Modifier)
-            .remoteClickable(onClick = onClick, onFocus = { focused = it }),
+            .remoteClickable(
+                onClick = onClick,
+                onFocus = {
+                    focused = it
+                    if (it) onFocused()
+                },
+            ),
         contentAlignment = Alignment.Center,
     ) {
         TvText(

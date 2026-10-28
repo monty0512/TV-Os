@@ -2,11 +2,13 @@
 <resources>
     <string name="app_name" translatable="false">TV-Os</string>
     <string name="shelf_no_channel">No preview channel yet</string>
-    <string name="shelf_hint">OK to open · Hold OK to reorder</string>
+    <string name="shelf_hint">OK to open · Hold OK to reorder · ▼ for all apps</string>
+    <string name="all_apps">ALL APPS</string>
+    <string name="drawer_hint">▲ on the first row returns to the Top Shelf</string>
     <string name="loading_apps">Loading apps…</string>
     <string name="personalize">Personalize</string>
     <string name="edit_title">Edit home row</string>
-    <string name="edit_hint">Select an app with OK, move it with left/right and press OK again to drop it. Back saves.</string>
+    <string name="edit_hint">Select an app with OK, move it with the arrows and press OK again to drop it. The first row are your favorites. Back saves.</string>
     <string name="edit_moving">Moving: %1$s</string>
     <string name="edit_selected">Selected: %1$s</string>
     <string name="hide">Hide</string>
@@ -24,8 +26,9 @@
     <string name="accent_green">Green</string>
     <string name="accent_purple">Purple</string>
     <string name="size">Icon size</string>
-    <string name="size_large">Large (5 per row)</string>
-    <string name="size_compact">Compact (7 per row)</string>
+    <string name="size_large">Large (5 columns)</string>
+    <string name="size_medium">Medium (6 columns)</string>
+    <string name="size_compact">Compact (7 columns)</string>
     <string name="large_text">Large text</string>
     <string name="high_contrast">High contrast</string>
     <string name="toggle_value">%1$s: %2$s</string>

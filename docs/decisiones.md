@@ -1,6 +1,6 @@
 # TV-Os · Decisiones aprobadas
 
-Diseño de muestra aprobado (8 pantallas): https://claude.ai/artifact/CbV4gxiAQKc1BHbkJLMdrh
+Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQKc1BHbkJLMdrh
 
 ## Dispositivo objetivo (confirmado con el diagnóstico de la Fase 0)
 | Dato | Valor | Impacto |
@@ -20,9 +20,9 @@ Diseño de muestra aprobado (8 pantallas): https://claude.ai/artifact/CbV4gxiAQK
 | Tema | Decisión |
 |---|---|
 | Enfoque | Launcher propio + kit ADB sin root (sin ROM) |
-| Estilo | Apple TV clásico: Top Shelf + fila de apps con efecto parallax |
+| Estilo | Apple TV clásico: Top Shelf + primera fila de favoritas; al bajar, cajón de apps en cuadrícula |
 | Top Shelf | Contenido de la app enfocada; si no publica nada, fondo con el color del icono y nombre grande |
-| Personalización | Ordenar/ocultar apps, tema (oscuro/claro/automático) + acento, tamaño (5 o 7 por fila) |
+| Personalización | Ordenar/ocultar apps (4 direcciones), tema (oscuro/claro/automático) + acento, tamaño (5, 6 o 7 columnas) |
 | Perfiles | Selector al encender; cada perfil con su fila de apps y su fondo |
 | Fondos | Solo desde el móvil: QR + página web local en la red Wi-Fi de casa |
 | Salvapantallas | Google Backdrop con reloj de TV-Os encima |

@@ -105,7 +105,7 @@ fun AppTile(
             size = 13.sp,
             weight = FontWeight.Medium,
             color = if (focused || alwaysShowLabel) t.fg else Color.Transparent,
-            modifier = Modifier.width(width + 24.dp),
+            modifier = Modifier.width(width),
         )
     }
 }

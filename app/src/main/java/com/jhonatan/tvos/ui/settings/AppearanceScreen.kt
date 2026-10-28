@@ -111,6 +111,11 @@ fun AppearanceScreen(
                 onClick = { onChange { it.copy(density = Density.LARGE) } },
             )
             TvButton(
+                text = stringResource(R.string.size_medium),
+                selected = settings.density == Density.MEDIUM,
+                onClick = { onChange { it.copy(density = Density.MEDIUM) } },
+            )
+            TvButton(
                 text = stringResource(R.string.size_compact),
                 selected = settings.density == Density.COMPACT,
                 onClick = { onChange { it.copy(density = Density.COMPACT) } },

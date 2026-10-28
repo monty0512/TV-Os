@@ -6,7 +6,7 @@ Launcher inmersivo al estilo Apple TV para televisores Android TV (objetivo inic
 - Kit ADB (diagnóstico, instalación, memoria): [`tools/adb-kit/`](tools/adb-kit/README.md)
 
 ## Estado
-**Fase 1:** Inicio con Top Shelf, fila de apps, ordenar/ocultar apps y apariencia.
+**Fase 1:** Inicio con Top Shelf y cajón de apps en cuadrícula (5/6/7 columnas), ordenar/ocultar apps en 4 direcciones y apariencia.
 
 ## Compilar (Android Studio)
 1. **File › Open…** y elige la carpeta del repositorio. Espera a que termine la sincronización de Gradle.

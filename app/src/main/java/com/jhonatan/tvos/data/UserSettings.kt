@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.map
 
 enum class ThemeMode { DARK, LIGHT, AUTO }
 
-enum class Density { LARGE, COMPACT }
+enum class Density { LARGE, MEDIUM, COMPACT }
 
 data class UserSettings(
     val theme: ThemeMode = ThemeMode.DARK,
