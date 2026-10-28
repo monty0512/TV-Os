@@ -2,8 +2,19 @@
 
 Diseño de muestra aprobado (8 pantallas): https://claude.ai/artifact/CbV4gxiAQKc1BHbkJLMdrh
 
-## Dispositivo objetivo
-- Xiaomi `MiTV-MOOQ0`, Android 11, ~2 GB de RAM (pendiente de confirmar con el diagnóstico de la Fase 0).
+## Dispositivo objetivo (confirmado con el diagnóstico de la Fase 0)
+| Dato | Valor | Impacto |
+|---|---|---|
+| Modelo | Xiaomi `MiTV-MOOQ0` (nombre interno `croods`) | — |
+| Android | **10 (API 29)**, parche 2022-01-05 | `minSdk 29` |
+| SoC / ABI | MediaTek `m7632`, 4 núcleos, **solo 32 bits** (`armeabi-v7a`) | Sin librerías nativas de 64 bits |
+| RAM | 1,8 GB, **`low_ram=true`**, ~550 MB libres, swap casi lleno | Modo adaptativo arranca en "reducido"; presupuesto de memoria estricto |
+| Pantalla | 1920×1080, densidad 320 (xhdpi) | Diseño a 960×540 dp |
+| Almacenamiento | 8,3 GB libres en `/data` | Sin problema |
+| Launcher actual | `com.jhonatan.milauncher` (Google tvlauncher y leanback ya desactivados) | TV-Os lo reemplaza |
+| Fallback HOME | `com.duokan.factorytest/.FactoryLauncher` | Nunca debe quedar como Inicio |
+| Backdrop | Instalado y activo como salvapantallas | Salvapantallas cubierto |
+| `READ_TV_LISTINGS` | Definido, `prot=dangerous` (se puede conceder por ADB) | Top Shelf viable; probar en Fase 3 |
 
 ## Producto
 | Tema | Decisión |
@@ -27,7 +38,7 @@ Diseño de muestra aprobado (8 pantallas): https://claude.ai/artifact/CbV4gxiAQK
 | Nombre | TV-Os |
 
 ## Arquitectura
-- Kotlin + Jetpack Compose for TV, `minSdk 30` (Android 11).
+- Kotlin + Jetpack Compose for TV, `minSdk 29` (Android 10), solo `armeabi-v7a`/sin código nativo. Presupuesto de memoria: < 60 MB PSS en Inicio.
 - DataStore (ajustes) + Room (perfiles). Sin servicios en la nube.
 - Módulos: `home`, `controlcenter`, `profiles`, `settings`, `onboarding`, `wallpaper`, `weather`, `perf`.
 - `tools/adb-kit/`: diagnóstico, instalación, limpieza y restauración.
