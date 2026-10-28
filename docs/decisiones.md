@@ -66,9 +66,10 @@ Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQ
 ## Fase 2 (decisiones)
 | Tema | Decisión |
 |---|---|
-| Abrir Centro de control | Botón ≡ del mando dentro de TV-Os. La pulsación larga de Inicio la gestiona el sistema; TV-Os la recibe solo si el firmware la envía como `ALL_APPS` (por verificar en el MiTV) |
+| Abrir Centro de control | Botón junto al reloj (▲ desde la primera fila). ≡ desde cualquier app vía accesibilidad (por verificar). Verificado: el ≡ no llega a las apps y la pulsación larga de Inicio va a `com.duokan.factorytest` |
 | Perfil guarda | Fila de apps (orden y favoritas), apps ocultas, tema, acento, tamaño y accesibilidad. El fondo llega en la Fase 3 |
 | Selector de perfiles | Al encender la TV (salir del reposo) si hay más de un perfil |
 | Centro de control | Perfil, liberar memoria, temporizador (15/30/60/90), entradas, Wi-Fi, imagen, volumen y apagar |
-| Apagar / temporizador | Administrador de dispositivo con solo "bloquear pantalla", activado por `install`. Por verificar que el MiTV entre en reposo |
+| Apagar / temporizador | Servicio de accesibilidad (`GLOBAL_ACTION_LOCK_SCREEN`), activado por `install`. El firmware de Xiaomi descarta el administrador de dispositivo (verificado) |
 | Entradas HDMI | `TvInputManager` + Live TV del fabricante. Por verificar en el MiTV |
+| Primera apertura lenta tras encender | Carga de arranque del sistema (verificado en logcat), no TV-Os. Fase 4: bloquear arranque automático de apps (AnyDesk, Twitch, Amazon…) |

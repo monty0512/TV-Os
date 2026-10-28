@@ -23,7 +23,7 @@ Write-Host "  1. Instalar/actualizar TV-Os: $Apk"
 Write-Host ("     (APK compilado el " + (Get-Item $Apk).LastWriteTime.ToString("yyyy-MM-dd HH:mm") + ")")
 Write-Host ("  2. Poner TV-Os como Inicio (antes: " + (Get-CurrentHome) + ")")
 Write-Host "  3. Mantener MiLauncher instalado como respaldo"
-Write-Host "  4. Permitir que TV-Os apague la pantalla (temporizador y botón Apagar del Centro de control)"
+Write-Host "  4. Activar el servicio de accesibilidad de TV-Os (apagar pantalla y botón ≡ desde cualquier app)"
 $ok = Read-Host "¿Continuar? (s/N)"
 if ($ok -notmatch "^(s|si|sí)$") { Write-Host "Cancelado. No se cambió nada."; exit 0 }
 
@@ -41,13 +41,18 @@ if ($now -eq $script:TvosHome -or $now -eq "$script:TvosPkg/$script:TvosPkg.Main
 } else {
     Write-Host "AVISO: el Inicio sigue siendo '$now'. Pulsa Inicio en el mando y elige TV-Os con 'Siempre'."
 }
-Write-Host "Activando el apagado desde TV-Os…"
-$adminOut = (Sh "dpm set-active-admin --user 0 $script:TvosAdmin") -join " "
-$policy = (Sh "dumpsys device_policy") -join "`n"
-if ($policy -match [regex]::Escape("com.jhonatan.tvos/.system.TvOsAdminReceiver")) {
-    Write-Host "OK: apagado activado"
+Write-Host "Activando el servicio de accesibilidad de TV-Os…"
+$cur = ((Sh "settings get secure enabled_accessibility_services") -join "").Trim()
+if ($cur -like "*$script:TvosA11y*") { $new = $cur }
+elseif ($cur -eq "" -or $cur -eq "null") { $new = $script:TvosA11y }
+else { $new = "${cur}:$script:TvosA11y" }   # conserva otros servicios ya activos
+Sh "settings put secure enabled_accessibility_services $new" | Out-Null
+Sh "settings put secure accessibility_enabled 1" | Out-Null
+Start-Sleep -Seconds 2
+if (((Sh "dumpsys accessibility") -join "`n") -match "TvOsAccessibilityService") {
+    Write-Host "OK: accesibilidad activada"
 } else {
-    Write-Host "AVISO: el apagado NO quedó activado. Respuesta del sistema: $adminOut"
+    Write-Host "AVISO: el sistema no cargó el servicio de accesibilidad."
 }
 Sh "input keyevent KEYCODE_HOME" | Out-Null
 Write-Host ""

@@ -3,7 +3,7 @@ $script:Adb = if ($env:ADB) { $env:ADB } else { "adb" }
 $script:TvosPkg = "com.jhonatan.tvos"
 $script:TvosHome = "com.jhonatan.tvos/.MainActivity"
 $script:BackupHome = "com.jhonatan.milauncher/.MainActivity"
-$script:TvosAdmin = "com.jhonatan.tvos/.system.TvOsAdminReceiver"
+$script:TvosA11y = "com.jhonatan.tvos/com.jhonatan.tvos.system.TvOsAccessibilityService"
 $script:AdbArgs = @()
 
 function Connect-Tv([string]$Target) {

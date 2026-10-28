@@ -3,7 +3,7 @@ ADB="${ADB:-adb}"
 TVOS_PKG="com.jhonatan.tvos"
 TVOS_HOME="$TVOS_PKG/.MainActivity"
 BACKUP_HOME="com.jhonatan.milauncher/.MainActivity"
-TVOS_ADMIN="$TVOS_PKG/.system.TvOsAdminReceiver"
+TVOS_A11Y="$TVOS_PKG/$TVOS_PKG.system.TvOsAccessibilityService"
 
 connect_tv() {
   local target="${1:-}"

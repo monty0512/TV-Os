@@ -33,7 +33,6 @@ import com.jhonatan.tvos.R
 import com.jhonatan.tvos.data.Density
 import com.jhonatan.tvos.data.ThemeMode
 import com.jhonatan.tvos.data.UserSettings
-import com.jhonatan.tvos.system.Power
 import com.jhonatan.tvos.ui.components.TvButton
 import com.jhonatan.tvos.ui.components.remoteClickable
 import com.jhonatan.tvos.ui.theme.Accents
@@ -142,16 +141,7 @@ fun AppearanceScreen(
             TvButton(text = stringResource(R.string.back), onClick = onBack)
         }
 
-        // Para desinstalar TV-Os, Android exige quitar antes el permiso de apagado.
         val context = LocalContext.current
-        var powerEnabled by remember { mutableStateOf(Power.isAvailable(context)) }
-        if (powerEnabled) {
-            TvButton(text = stringResource(R.string.disable_power), onClick = {
-                Power.disable(context)
-                powerEnabled = false
-            })
-        }
-
         val version = remember {
             runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "?"
         }

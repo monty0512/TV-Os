@@ -3,10 +3,7 @@ package com.jhonatan.tvos.system
 import android.app.ActivityManager
 import android.app.AlarmManager
 import android.app.PendingIntent
-import android.app.admin.DeviceAdminReceiver
-import android.app.admin.DevicePolicyManager
 import android.content.BroadcastReceiver
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
@@ -21,9 +18,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
-/** Administrador de dispositivo: solo pide "bloquear pantalla" para apagar la TV (temporizador y botón Apagar). */
-class TvOsAdminReceiver : DeviceAdminReceiver()
-
 /** Salta cuando vence el temporizador de apagado. */
 class SleepReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -32,25 +26,15 @@ class SleepReceiver : BroadcastReceiver() {
     }
 }
 
+/**
+ * Apagado a través del servicio de accesibilidad de TV-Os (Xiaomi bloquea el administrador de dispositivo).
+ * El servicio lo activa el script de instalación.
+ */
 object Power {
-    fun isAvailable(context: Context): Boolean {
-        val dpm = context.getSystemService(DevicePolicyManager::class.java) ?: return false
-        return dpm.isAdminActive(ComponentName(context, TvOsAdminReceiver::class.java))
-    }
+    fun isAvailable(@Suppress("UNUSED_PARAMETER") context: Context): Boolean = TvOsAccessibilityService.isRunning
 
-    /** Quita el permiso de apagado (necesario antes de desinstalar TV-Os). */
-    fun disable(context: Context) {
-        runCatching {
-            context.getSystemService(DevicePolicyManager::class.java)
-                ?.removeActiveAdmin(ComponentName(context, TvOsAdminReceiver::class.java))
-        }
-    }
-
-    /** Apaga la pantalla (reposo). Requiere que el script de instalación active el administrador. */
-    fun turnOff(context: Context): Boolean {
-        if (!isAvailable(context)) return false
-        return runCatching { context.getSystemService(DevicePolicyManager::class.java)?.lockNow() }.isSuccess
-    }
+    /** Apaga la pantalla (reposo). */
+    fun turnOff(@Suppress("UNUSED_PARAMETER") context: Context): Boolean = TvOsAccessibilityService.lockScreen()
 }
 
 object SleepTimer {

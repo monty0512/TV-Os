@@ -46,9 +46,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 192.168.1.50
 # Linux / macOS
 ./install.sh 192.168.1.50
 ```
-El script muestra lo que va a hacer y pide confirmación. Instala el APK, pone TV-Os como Inicio, **deja MiLauncher instalado** como respaldo y activa el permiso de apagado (temporizador y botón Apagar del Centro de control).
-
-> Para **desinstalar** TV-Os, primero quita ese permiso en TV-Os › Personalizar › "Desactivar apagado".
+El script muestra lo que va a hacer y pide confirmación. Instala el APK, pone TV-Os como Inicio, **deja MiLauncher instalado** como respaldo y activa el servicio de accesibilidad de TV-Os (apagar pantalla y botón ≡ desde cualquier app). Xiaomi bloquea el administrador de dispositivo, por eso se usa accesibilidad.
 
 Volver a MiLauncher en cualquier momento:
 ```powershell

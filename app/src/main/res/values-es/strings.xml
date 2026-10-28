@@ -73,7 +73,7 @@
     <string name="cc_picture">Imagen</string>
     <string name="cc_volume">Volumen</string>
     <string name="cc_power_off">Apagar TV</string>
-    <string name="cc_power_unavailable">El apagado no está activado: vuelve a ejecutar install desde el PC.</string>
+    <string name="cc_power_unavailable">El apagado no está activado: vuelve a ejecutar install desde el PC (activa el servicio de accesibilidad de TV-Os).</string>
     <string name="cc_hint">≡ o Atrás para cerrar</string>
-    <string name="disable_power">Desactivar apagado (necesario para desinstalar TV-Os)</string>
+    <string name="a11y_description">TV-Os usa este servicio solo para apagar la pantalla (temporizador y botón Apagar) y para abrir el Centro de control con el botón ≡ desde cualquier app. No lee el contenido de la pantalla.</string>
 </resources>

@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (intent?.action == Intent.ACTION_ALL_APPS) controlCenterEvents++
+        if (intent?.action.isControlCenter()) controlCenterEvents++
         setContent { TvOsRoot(homeEvents, controlCenterEvents, foreground, trimEvents) }
     }
 
@@ -51,6 +51,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        if (intent.action == Intent.ACTION_ALL_APPS) controlCenterEvents++ else homeEvents++
+        if (intent.action.isControlCenter()) controlCenterEvents++ else homeEvents++
+    }
+
+    private fun String?.isControlCenter() = this == Intent.ACTION_ALL_APPS || this == ACTION_CONTROL_CENTER
+
+    companion object {
+        /** Lo envía el servicio de accesibilidad al pulsar ≡ en cualquier app. */
+        const val ACTION_CONTROL_CENTER = "com.jhonatan.tvos.CONTROL_CENTER"
     }
 }

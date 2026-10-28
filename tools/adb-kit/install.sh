@@ -25,7 +25,7 @@ echo "  1. Instalar/actualizar TV-Os: $APK"
 echo "     (APK compilado el $(date -r "$APK" "+%Y-%m-%d %H:%M"))"
 echo "  2. Poner TV-Os como Inicio (antes: $(current_home))"
 echo "  3. Mantener MiLauncher instalado como respaldo"
-echo "  4. Permitir que TV-Os apague la pantalla (temporizador y botón Apagar del Centro de control)"
+echo "  4. Activar el servicio de accesibilidad de TV-Os (apagar pantalla y botón ≡ desde cualquier app)"
 read -r -p "¿Continuar? (s/N) " ok
 case "$ok" in s|S|si|SI|sí|Sí) ;; *) echo "Cancelado. No se cambió nada."; exit 0 ;; esac
 
@@ -41,12 +41,20 @@ if [ "$NOW" = "$TVOS_HOME" ] || [ "$NOW" = "$TVOS_PKG/$TVOS_PKG.MainActivity" ];
 else
   echo "AVISO: el Inicio sigue siendo '$NOW'. Pulsa Inicio en el mando y elige TV-Os con 'Siempre'."
 fi
-echo "Activando el apagado desde TV-Os…"
-ADMIN_OUT="$(sh_ dpm set-active-admin --user 0 "$TVOS_ADMIN")"
-if sh_ dumpsys device_policy | grep -q "com.jhonatan.tvos/.system.TvOsAdminReceiver"; then
-  echo "OK: apagado activado"
+echo "Activando el servicio de accesibilidad de TV-Os…"
+CUR="$(sh_ settings get secure enabled_accessibility_services)"
+case "$CUR" in
+  *"$TVOS_A11Y"*) NEW="$CUR" ;;
+  ""|null) NEW="$TVOS_A11Y" ;;
+  *) NEW="$CUR:$TVOS_A11Y" ;;   # conserva otros servicios ya activos
+esac
+sh_ settings put secure enabled_accessibility_services "$NEW" >/dev/null
+sh_ settings put secure accessibility_enabled 1 >/dev/null
+sleep 2
+if sh_ dumpsys accessibility | grep -q "TvOsAccessibilityService"; then
+  echo "OK: accesibilidad activada"
 else
-  echo "AVISO: el apagado NO quedó activado. Respuesta del sistema: $ADMIN_OUT"
+  echo "AVISO: el sistema no cargó el servicio de accesibilidad."
 fi
 sh_ input keyevent KEYCODE_HOME >/dev/null
 echo
