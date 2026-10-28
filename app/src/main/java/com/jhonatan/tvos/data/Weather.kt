@@ -54,7 +54,8 @@ object Weather {
             runCatching {
                 val o = JSONObject(get(url))
                 Triple(o.getDouble("latitude"), o.getDouble("longitude"), o.optString("city"))
-            }.getOrNull()
+            }.onFailure { Log.w("TvOs", "clima: ubicación por IP falló en $url: ${it.javaClass.simpleName} ${it.message}") }
+                .getOrNull()
         } ?: return null
         prefs.edit()
             .putFloat("lat", found.first.toFloat())
