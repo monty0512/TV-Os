@@ -62,7 +62,7 @@ Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQ
 2. Perfiles, bienvenida, Centro de control ✅ (v0.2.3, verificado en el MiTV)
 3. Top Shelf + Continuar viendo, fondo desde el móvil, clima ✅
 4. Kit ADB de limpieza completa con opción de deshacer ✅ (verificado tras reiniciar)
-5. Cierre v1.0: ciudad manual, clave propia, instalación en un paso ← **en prueba**
+5. Cierre v1.0: ciudad manual, clave propia, instalación en un paso ✅ **v1.0.0 verificada en el MiTV** (clima manual, foto de perfil, temporizador, entradas HDMI, apertura de Netflix y Disney+)
 
 ## Fase 2 (decisiones)
 | Tema | Decisión |
@@ -116,3 +116,4 @@ Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQ
 | Ciudad manual | Apariencia › Clima: búsqueda con la geocodificación de Open-Meteo, confirmar y guardar; "Automática" vuelve a la IP. Común a todos los perfiles |
 | Firma | Clave propia con `keystore.properties` (fuera de git). Sin él, clave de depuración. El primer cambio de clave obliga a desinstalar: se pierden perfiles y fotos; `install` lo detecta y pide confirmación |
 | Instalación | `install` pregunta al final si aplica la limpieza |
+| Actualizar | Extraer cada ZIP en una carpeta nueva y copiar `tools/adb-kit/reports` (respaldos de la limpieza) |
