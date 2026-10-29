@@ -46,7 +46,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 192.168.1.50
 # Linux / macOS
 ./install.sh 192.168.1.50
 ```
-El script muestra lo que va a hacer y pide confirmación. Instala el APK, pone TV-Os como Inicio, **deja MiLauncher instalado** como respaldo y activa el servicio de accesibilidad de TV-Os (apagar pantalla y botón ≡ desde cualquier app). Xiaomi bloquea el administrador de dispositivo, por eso se usa accesibilidad.
+El script muestra lo que va a hacer y pide confirmación. Instala el APK (si cambió la clave de firma, avisa y pide permiso para desinstalar: se pierden perfiles y fotos), pone TV-Os como Inicio, **deja MiLauncher instalado** como respaldo y activa el servicio de accesibilidad de TV-Os (apagar pantalla y botón ≡ desde cualquier app). Xiaomi bloquea el administrador de dispositivo, por eso se usa accesibilidad. Al final pregunta si aplica la limpieza (`cleanup`).
 
 Volver a MiLauncher en cualquier momento:
 ```powershell

@@ -114,4 +114,13 @@
     <string name="av_page_heading">Send your profile photo to the TV</string>
     <string name="av_page_note">The photo is cropped to a centered square and replaces your initial on the TV.</string>
     <string name="av_remove">Remove photo</string>
+    <string name="weather">Weather</string>
+    <string name="weather_auto">Automatic</string>
+    <string name="weather_change">Change city</string>
+    <string name="weather_city_hint">City</string>
+    <string name="weather_search">Search</string>
+    <string name="weather_save">Save</string>
+    <string name="weather_cancel">Cancel</string>
+    <string name="weather_searching">Searching…</string>
+    <string name="weather_not_found">City not found</string>
 </resources>

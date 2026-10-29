@@ -113,4 +113,13 @@
     <string name="av_page_heading">Enviar foto de perfil a la TV</string>
     <string name="av_page_note">La foto se recorta en un cuadrado centrado y sustituye a tu inicial en la TV.</string>
     <string name="av_remove">Quitar foto</string>
+    <string name="weather">Clima</string>
+    <string name="weather_auto">Automática</string>
+    <string name="weather_change">Cambiar ciudad</string>
+    <string name="weather_city_hint">Ciudad</string>
+    <string name="weather_search">Buscar</string>
+    <string name="weather_save">Guardar</string>
+    <string name="weather_cancel">Cancelar</string>
+    <string name="weather_searching">Buscando…</string>
+    <string name="weather_not_found">No se encontró la ciudad</string>
 </resources>

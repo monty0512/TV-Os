@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -12,9 +14,24 @@ android {
         applicationId = "com.jhonatan.tvos"
         minSdk = 29 // Android 10: MiTV-MOOQ0
         targetSdk = 34
-        versionCode = 13
-        versionName = "0.4.1"
+        versionCode = 20
+        versionName = "1.0.0"
         resourceConfigurations += listOf("es", "en")
+    }
+
+    // Clave propia (v1.0): keystore.properties en la raíz del repositorio, fuera de git.
+    // Sin ese archivo se firma con la clave de depuración de Android Studio, como hasta la v0.4.
+    val keystoreFile = rootProject.file("keystore.properties")
+    val keystore = Properties().apply { if (keystoreFile.exists()) keystoreFile.inputStream().use { load(it) } }
+    signingConfigs {
+        if (keystoreFile.exists()) {
+            create("tvos") {
+                storeFile = rootProject.file(keystore.getProperty("storeFile"))
+                storePassword = keystore.getProperty("storePassword")
+                keyAlias = keystore.getProperty("keyAlias")
+                keyPassword = keystore.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
@@ -23,8 +40,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Uso personal por ADB: se firma con la clave de depuración de Android Studio.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("tvos") ?: signingConfigs.getByName("debug")
         }
     }
 

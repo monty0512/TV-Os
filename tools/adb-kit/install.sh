@@ -31,7 +31,18 @@ read -r -p "¿Continuar? (s/N) " ok
 case "$ok" in s|S|si|SI|sí|Sí) ;; *) echo "Cancelado. No se cambió nada."; exit 0 ;; esac
 
 echo "Instalando…"
-"${ADB_DEV[@]}" install -r "$APK" || { echo "ERROR: falló la instalación."; exit 1; }
+OUT="$("${ADB_DEV[@]}" install -r "$APK" 2>&1)"; echo "$OUT"
+if echo "$OUT" | grep -q INSTALL_FAILED_UPDATE_INCOMPATIBLE; then
+  echo
+  echo "El APK está firmado con otra clave que la versión instalada (cambio a la clave propia de la v1.0)."
+  echo "Para continuar hay que desinstalar TV-Os: se borran los perfiles, fondos y fotos (se vuelven a crear en la bienvenida)."
+  read -r -p "¿Desinstalar y volver a instalar? (s/N) " ok
+  case "$ok" in s|S|si|SI|sí|Sí) ;; *) echo "Cancelado. TV-Os sigue como estaba."; exit 0 ;; esac
+  sh_ cmd package set-home-activity "$BACKUP_HOME" >/dev/null   # que el Inicio no quede en la app de fábrica
+  "${ADB_DEV[@]}" uninstall "$TVOS_PKG" >/dev/null
+  OUT="$("${ADB_DEV[@]}" install "$APK" 2>&1)"; echo "$OUT"
+fi
+echo "$OUT" | grep -q Success || { echo "ERROR: falló la instalación."; exit 1; }
 
 echo "Versión instalada: $(sh_ dumpsys package "$TVOS_PKG" | grep -m1 versionName= | sed 's/.*versionName=//')"
 echo "Poniendo TV-Os como Inicio…"
@@ -67,3 +78,6 @@ fi
 sh_ input keyevent KEYCODE_HOME >/dev/null
 echo
 echo "Listo. Para volver a MiLauncher: ./restore-home.sh ${1:-}"
+echo
+read -r -p "¿Aplicar ahora la limpieza (apps desactivadas, arranque automático y animaciones)? (s/N) " ok
+case "$ok" in s|S|si|SI|sí|Sí) "$DIR/cleanup.sh" "${1:-}" ;; esac

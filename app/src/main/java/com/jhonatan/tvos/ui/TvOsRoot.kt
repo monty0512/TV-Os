@@ -90,6 +90,7 @@ fun TvOsRoot(
     var shelfContent by remember { mutableStateOf<Map<String, List<ShelfItem>>>(emptyMap()) }
     var watchNext by remember { mutableStateOf<List<ShelfItem>>(emptyList()) }
     var weather by remember { mutableStateOf<WeatherNow?>(null) }
+    var weatherKey by remember { mutableIntStateOf(0) }
     var welcome by remember { mutableStateOf<Profile?>(null) }
     var profileBackground by remember { mutableStateOf<ImageBitmap?>(null) }
     val latestState by rememberUpdatedState(stateOrNull)
@@ -146,8 +147,8 @@ fun TvOsRoot(
         shelfContent = content.previewByPackage()
         watchNext = content.watchNext()
     }
-    // Clima: cada 30 minutos mientras TV-Os está en pantalla.
-    LaunchedEffect(foreground) {
+    // Clima: cada 30 minutos mientras TV-Os está en pantalla, y al cambiar la ciudad.
+    LaunchedEffect(foreground, weatherKey) {
         while (foreground) {
             Weather.fetch(context)?.let { weather = it }
             delay(30 * 60_000L)
@@ -341,6 +342,7 @@ fun TvOsRoot(
                         photoKind = PhotoKind.AVATAR
                         screen = Screen.PHONE_WALLPAPER
                     },
+                    onWeatherChanged = { weatherKey++ },
                     onBack = { screen = Screen.HOME },
                 )
 

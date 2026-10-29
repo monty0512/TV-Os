@@ -17,8 +17,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -30,15 +32,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jhonatan.tvos.R
+import com.jhonatan.tvos.data.City
+import com.jhonatan.tvos.data.Weather
 import com.jhonatan.tvos.data.Density
 import com.jhonatan.tvos.data.ThemeMode
 import com.jhonatan.tvos.data.UserSettings
 import com.jhonatan.tvos.ui.components.TvButton
+import com.jhonatan.tvos.ui.components.TvTextField
 import com.jhonatan.tvos.ui.components.remoteClickable
 import com.jhonatan.tvos.ui.theme.Accents
 import com.jhonatan.tvos.ui.theme.LocalReducedEffects
 import com.jhonatan.tvos.ui.theme.LocalTv
 import com.jhonatan.tvos.ui.theme.TvText
+import kotlinx.coroutines.launch
+import java.util.Locale
 
 /** Pantalla 6 del diseño: tema, acento, tamaño y accesibilidad. Los cambios se aplican al instante. */
 @Composable
@@ -48,6 +55,7 @@ fun AppearanceScreen(
     onReorder: () -> Unit,
     onPhoneWallpaper: () -> Unit,
     onPhoneAvatar: () -> Unit,
+    onWeatherChanged: () -> Unit,
     onBack: () -> Unit,
 ) {
     val t = LocalTv.current
@@ -138,6 +146,8 @@ fun AppearanceScreen(
             )
         }
 
+        WeatherSection(onWeatherChanged)
+
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             TvButton(text = stringResource(R.string.reorder_apps), onClick = onReorder)
             TvButton(text = stringResource(R.string.wp_open), onClick = onPhoneWallpaper)
@@ -157,10 +167,71 @@ fun AppearanceScreen(
     }
 }
 
+/** Ciudad del clima: automática por IP o elegida a mano (para todos los perfiles). */
+@Composable
+private fun WeatherSection(onWeatherChanged: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var manual by remember { mutableStateOf(Weather.manualCity(context)) }
+    var editing by remember { mutableStateOf(false) }
+    var query by remember { mutableStateOf("") }
+    var result by remember { mutableStateOf<City?>(null) }
+    var status by remember { mutableStateOf<Int?>(null) }
+
+    fun search() {
+        if (query.isBlank()) return
+        status = R.string.weather_searching
+        result = null
+        scope.launch {
+            result = Weather.search(query, Locale.getDefault().language)
+            status = if (result == null) R.string.weather_not_found else null
+        }
+    }
+
+    Section(stringResource(R.string.weather)) {
+        if (!editing) {
+            val auto = stringResource(R.string.weather_auto)
+            val autoCity = Weather.autoCity(context)
+            TvButton(
+                text = if (manual == null && autoCity.isNotBlank()) "$auto · $autoCity" else auto,
+                selected = manual == null,
+                onClick = {
+                    if (manual != null) {
+                        Weather.clearManual(context)
+                        manual = null
+                        onWeatherChanged()
+                    }
+                },
+            )
+            manual?.let { TvButton(text = it, selected = true, onClick = {}) }
+            TvButton(text = stringResource(R.string.weather_change), onClick = {
+                query = ""
+                result = null
+                status = null
+                editing = true
+            })
+        } else {
+            TvTextField(query, { query = it }, stringResource(R.string.weather_city_hint), width = 260.dp, onDone = ::search)
+            TvButton(text = stringResource(R.string.weather_search), onClick = ::search)
+            result?.let { city ->
+                TvText(city.label, 16.sp, maxLines = 1)
+                TvButton(text = stringResource(R.string.weather_save), onClick = {
+                    Weather.setManual(context, city)
+                    manual = city.name
+                    editing = false
+                    onWeatherChanged()
+                })
+            }
+            status?.let { TvText(stringResource(it), 15.sp, color = LocalTv.current.fgMuted) }
+            TvButton(text = stringResource(R.string.weather_cancel), onClick = { editing = false })
+        }
+    }
+}
+
 @Composable
 private fun Section(title: String, content: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         TvText(title, 14.sp, color = LocalTv.current.fgMuted)
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { content() }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) { content() }
     }
 }

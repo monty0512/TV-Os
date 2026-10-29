@@ -29,8 +29,20 @@ $ok = Read-Host "¿Continuar? (s/N)"
 if ($ok -notmatch "^(s|si|sí)$") { Write-Host "Cancelado. No se cambió nada."; exit 0 }
 
 Write-Host "Instalando…"
-& $script:Adb @script:AdbArgs install -r "$Apk"
-if ($LASTEXITCODE -ne 0) { Write-Host "ERROR: falló la instalación."; exit 1 }
+$out = (& $script:Adb @script:AdbArgs install -r "$Apk" 2>&1) -join "`n"
+Write-Host $out
+if ($out -match "INSTALL_FAILED_UPDATE_INCOMPATIBLE") {
+    Write-Host ""
+    Write-Host "El APK está firmado con otra clave que la versión instalada (cambio a la clave propia de la v1.0)."
+    Write-Host "Para continuar hay que desinstalar TV-Os: se borran los perfiles, fondos y fotos (se vuelven a crear en la bienvenida)."
+    $ok = Read-Host "¿Desinstalar y volver a instalar? (s/N)"
+    if ($ok -notmatch "^(s|si|sí)$") { Write-Host "Cancelado. TV-Os sigue como estaba."; exit 0 }
+    Sh "cmd package set-home-activity $script:BackupHome" | Out-Null   # que el Inicio no quede en la app de fábrica
+    & $script:Adb @script:AdbArgs uninstall $script:TvosPkg | Out-Null
+    $out = (& $script:Adb @script:AdbArgs install "$Apk" 2>&1) -join "`n"
+    Write-Host $out
+}
+if ($out -notmatch "Success") { Write-Host "ERROR: falló la instalación."; exit 1 }
 
 $ver = (Sh "dumpsys package $script:TvosPkg") | Where-Object { $_ -match "versionName=" } | Select-Object -First 1
 Write-Host ("Versión instalada: " + ($ver -replace ".*versionName=", ""))
@@ -65,3 +77,6 @@ if (((Sh "dumpsys package $script:TvosPkg") -join "`n") -match "READ_TV_LISTINGS
 Sh "input keyevent KEYCODE_HOME" | Out-Null
 Write-Host ""
 Write-Host "Listo. Para volver a MiLauncher: .\restore-home.ps1 $Target"
+Write-Host ""
+$ok = Read-Host "¿Aplicar ahora la limpieza (apps desactivadas, arranque automático y animaciones)? (s/N)"
+if ($ok -match "^(s|si|sí)$") { & (Join-Path $PSScriptRoot "cleanup.ps1") $Target }

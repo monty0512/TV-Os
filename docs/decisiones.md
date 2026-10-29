@@ -25,16 +25,16 @@ Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQ
 | Personalización | Ordenar/ocultar apps (4 direcciones), tema (oscuro/claro/automático) + acento, tamaño (5, 6 o 7 columnas) |
 | Perfiles | Selector al encender; cada perfil con su fila de apps y su fondo |
 | Fondos | Solo desde el móvil: QR + página web local en la red Wi-Fi de casa |
-| Salvapantallas | Google Backdrop con reloj de TV-Os encima |
+| Salvapantallas | Google Backdrop del sistema (el reloj encima se quitó del alcance en la v1.0: no se puede dibujar sobre Backdrop) |
 | Centro de control | Pulsación larga en Inicio: perfil, entrada, Wi-Fi, temporizador, modo de imagen, volumen |
 | Rendimiento | Adaptativo según memoria disponible |
 | Bienvenida | Crear perfiles → apps favoritas → tema y tamaño |
 | Accesibilidad | Español/inglés, texto grande, alto contraste |
-| Clima | Ubicación automática por IP (Open-Meteo); ciudad manual como respaldo |
+| Clima | Ubicación automática por IP (Open-Meteo); ciudad manual en Apariencia (v1.0) |
 | Voz | Se mantiene el Asistente de Google |
-| Continuar viendo | Contenido publicado por las apps + apps recientes |
+| Continuar viendo | Contenido publicado por las apps, en el carrusel de cada app (apps recientes quitadas del alcance en la v1.0) |
 | Limpieza | Equilibrada: PatchWall, anuncios, telemetría y apps de Xiaomi; se conservan Play Store, Chromecast y Asistente |
-| Instalación y actualización | Solo con el script de PC (APK + permisos + limpieza) |
+| Instalación y actualización | Solo con el script de PC: `install` (APK + permisos) ofrece aplicar `cleanup` al final |
 | Nombre | TV-Os |
 
 ## Decisiones tras el diagnóstico
@@ -46,8 +46,8 @@ Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQ
 | Liberar memoria | Botón en el Centro de control (`killBackgroundProcesses`) |
 
 ## Arquitectura
-- Kotlin + Jetpack Compose for TV, `minSdk 29` (Android 10), solo `armeabi-v7a`/sin código nativo. Presupuesto de memoria: < 70 MB PSS en Inicio (medido 78 MB antes de optimizar; ~20 MB son búferes de pantalla 1080p, fijos). Banners RGB_565, liberados solo cuando Android pide memoria (onTrimMemory) con TV-Os en segundo plano.
-- DataStore (ajustes) + Room (perfiles). Sin servicios en la nube.
+- Kotlin + Jetpack Compose (foundation, sin tv-material), `minSdk 29` (Android 10), solo `armeabi-v7a`/sin código nativo. Presupuesto de memoria: < 70 MB PSS en Inicio (medido 78 MB antes de optimizar; ~20 MB son búferes de pantalla 1080p, fijos). Banners RGB_565, liberados solo cuando Android pide memoria (onTrimMemory) con TV-Os en segundo plano.
+- DataStore (ajustes y perfiles en JSON). Sin servicios en la nube.
 - Módulos: `home`, `controlcenter`, `profiles`, `settings`, `onboarding`, `wallpaper`, `weather`, `perf`.
 - `tools/adb-kit/`: diagnóstico, instalación, limpieza y restauración.
 
@@ -61,7 +61,8 @@ Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQ
 1. Inicio, ordenar/ocultar apps, apariencia ✅
 2. Perfiles, bienvenida, Centro de control ✅ (v0.2.3, verificado en el MiTV)
 3. Top Shelf + Continuar viendo, fondo desde el móvil, clima ✅
-4. Kit ADB de limpieza completa con opción de deshacer ← **en prueba**
+4. Kit ADB de limpieza completa con opción de deshacer ✅ (verificado tras reiniciar)
+5. Cierre v1.0: ciudad manual, clave propia, instalación en un paso ← **en prueba**
 
 ## Fase 2 (decisiones)
 | Tema | Decisión |
@@ -106,3 +107,12 @@ Diseño de muestra aprobado (10 pantallas): https://claude.ai/artifact/CbV4gxiAQ
 | Verificado tras reiniciar | AnyDesk y las apps de Xiaomi desactivadas ya no arrancan solas (logcat `-b system`) |
 | Animaciones | 0.5 en las tres escalas |
 | Deshacer | Cada ejecución guarda un respaldo en `reports/`; `cleanup-restore` los aplica todos y gana el más antiguo (estado original) |
+
+## Fase 5 (v1.0.0)
+| Tema | Decisión |
+|---|---|
+| Salvapantallas propio | Quitado del alcance; se mantiene Backdrop |
+| Apps recientes | Quitadas del alcance; el carrusel por app cubre "Continuar viendo" |
+| Ciudad manual | Apariencia › Clima: búsqueda con la geocodificación de Open-Meteo, confirmar y guardar; "Automática" vuelve a la IP. Común a todos los perfiles |
+| Firma | Clave propia con `keystore.properties` (fuera de git). Sin él, clave de depuración. El primer cambio de clave obliga a desinstalar: se pierden perfiles y fotos; `install` lo detecta y pide confirmación |
+| Instalación | `install` pregunta al final si aplica la limpieza |

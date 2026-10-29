@@ -7,3 +7,8 @@ tools/adb-kit/reports/
 build/
 local.properties
 *.iml
+
+# Clave de firma de la v1.0: nunca al repositorio
+keystore.properties
+*.jks
+*.keystore
